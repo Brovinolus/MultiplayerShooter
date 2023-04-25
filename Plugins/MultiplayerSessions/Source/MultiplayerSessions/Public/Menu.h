@@ -7,7 +7,10 @@
 #include "Menu.generated.h"
 
 /**
- * 
+* A much easier solution if you don't see changes to code in the Plugin is to first close the unreal engine editor.
+* Then in Visual Studios click Build->Clean Solution, then click Build-Build Solution.
+* Then you can open the editor and you will see your changes.
+* Has the same impact as deleting the temp folders and regenerating the files and has worked for me every time in this course so far without failure.
  */
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
@@ -15,10 +18,11 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup();
+	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")));
 
 protected:
 	virtual bool Initialize() override;
+	virtual void NativeDestruct() override;
 	
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -33,6 +37,11 @@ private:
 	UFUNCTION()
 	void JoinButtonClicked();
 
+	void MenuTearDown();
+
 	// The subsystem designed to handle all online session functionality
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
+
+	int32 NumPublicConnections{4};
+	FString MatchType{TEXT("FreeForAll")};
 };
