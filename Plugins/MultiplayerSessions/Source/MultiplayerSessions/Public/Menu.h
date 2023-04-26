@@ -23,6 +23,14 @@ public:
 protected:
 	virtual bool Initialize() override;
 	virtual void NativeDestruct() override;
+
+	//
+	// Callbacks for the custom delegates on the MultiplayerSessionsSubsystem
+	//
+
+	// Since it is a dynamic delegate, it means that the bind functions have to be UFUNCTION
+	UFUNCTION()
+	void OnCreateSession(bool bWasSuccessful);
 	
 private:
 	UPROPERTY(meta = (BindWidget))
