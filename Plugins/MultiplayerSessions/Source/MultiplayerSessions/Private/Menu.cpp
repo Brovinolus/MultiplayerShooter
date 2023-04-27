@@ -126,8 +126,9 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
 {
-	if (MultiplayerSessionsSubsystem == nullptr)
+	if (!MultiplayerSessionsSubsystem)
 	{
+		JoinButton->SetIsEnabled(true);
 		return;
 	}
 	
@@ -138,14 +139,11 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		if(SettingsValue == MatchType)
 		{
 			MultiplayerSessionsSubsystem->JoinSession(Result);
-			return;;
+			return;
 		}
 	}
 
-	if (!bWasSuccessful || SessionResults.Num() == 0)
-	{
-		JoinButton->SetIsEnabled(true);
-	}
+	JoinButton->SetIsEnabled(true);
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
