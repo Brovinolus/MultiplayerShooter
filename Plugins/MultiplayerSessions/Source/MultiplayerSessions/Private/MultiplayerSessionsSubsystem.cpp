@@ -123,6 +123,7 @@ void UMultiplayerSessionsSubsystem::StartSession()
 {
 	if (!SessionInterface.IsValid())
 	{
+		MultiplayerOnStartSessionComplete.Broadcast(false);
 		return;
 	}
 
@@ -130,9 +131,8 @@ void UMultiplayerSessionsSubsystem::StartSession()
 
 	if(!SessionInterface->StartSession(NAME_GameSession))
 	{
-		SessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);
-
 		// Broadcast our own custom delegate
+		SessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);
 		MultiplayerOnStartSessionComplete.Broadcast(false);
 	}
 }
@@ -192,10 +192,14 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 
 void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	if (SessionInterface)
+	if (!SessionInterface.IsValid())
+	{
+		return;
+	}
+	
+	if(bWasSuccessful)
 	{
 		SessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);
+		MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 	}
-
-	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 }

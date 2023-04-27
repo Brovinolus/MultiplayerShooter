@@ -23,16 +23,29 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 				FColor::Yellow,
 				FString::Printf(TEXT("Players in game: %d"), NumberOfPlayers)
 			);
-
-			APlayerState* PlayerState = NewPlayer->GetPlayerState<APlayerState>();
-			if(PlayerState)
+		}
+		APlayerState* PlayerState = NewPlayer->GetPlayerState<APlayerState>();
+		if(PlayerState)
+		{
+			FString PlayerName = PlayerState->GetPlayerName();
+			if (GEngine)
 			{
-				FString PlayerName = PlayerState->GetPlayerName();
-					GEngine->AddOnScreenDebugMessage(
+				GEngine->AddOnScreenDebugMessage(
 					-1,
 					60.f,
-					FColor::Cyan,
+					FColor::Orange,
 					FString::Printf(TEXT("%s has joined the game!"), *PlayerName)
+				);
+			}
+		
+			FName SessionName = PlayerState->SessionName;
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					60.f,
+					FColor::White,
+					FString::Printf(TEXT("%s"), *SessionName.ToString())
 				);
 			}
 		}

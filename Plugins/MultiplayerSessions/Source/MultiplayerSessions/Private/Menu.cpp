@@ -107,6 +107,11 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		{
 			World->ServerTravel(PathToLobby);
 		}
+
+		if (MultiplayerSessionsSubsystem)
+		{
+			MultiplayerSessionsSubsystem->StartSession();
+		}
 	}
 	else
 	{
@@ -174,6 +179,30 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 
 void UMenu::OnDestroySession(bool bWasSuccessful)
 {
+	if (bWasSuccessful)
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Green,
+				FString(TEXT("Session destroyed successfuly"))
+			);
+		}
+	}
+	else
+	{
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Red,
+				FString(TEXT("Failed to destroy session!"))
+			);
+		}
+	}
 }
 
 void UMenu::OnStartSession(bool bWasSuccessful)
@@ -185,7 +214,7 @@ void UMenu::OnStartSession(bool bWasSuccessful)
 			GEngine->AddOnScreenDebugMessage(
 				-1,
 				15.f,
-				FColor::Yellow,
+				FColor::Blue,
 				FString(TEXT("Session started successfuly"))
 			);
 		}
