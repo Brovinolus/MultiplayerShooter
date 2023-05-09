@@ -15,6 +15,7 @@ public:
 	AShootingCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -27,11 +28,20 @@ protected:
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class USpringArmComponent* CameraBoom;
+	TObjectPtr<class USpringArmComponent> CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class UCameraComponent* FollowCamera;
+	TObjectPtr<class UCameraComponent> FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverHeadWidget;
+	TObjectPtr<class UWidgetComponent> OverHeadWidget;
+
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
+	TObjectPtr<class AWeapon> OverlappingWeapon;
+
+	UFUNCTION()
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+
+public:
+	void SetOverlappingWeapon(AWeapon* Weapon);
 };
