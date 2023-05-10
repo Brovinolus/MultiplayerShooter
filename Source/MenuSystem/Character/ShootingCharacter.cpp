@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "MenuSystem/ShooterComponents/CombatComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MenuSystem/Weapon/Weapon.h"
 
@@ -26,6 +27,9 @@ AShootingCharacter::AShootingCharacter()
 
 	OverHeadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverHeadWidget"));
 	OverHeadWidget->SetupAttachment(RootComponent);
+
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	Combat->SetIsReplicated(true);
 }
 
 void AShootingCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -50,11 +54,21 @@ void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AShootingCharacter::EquipButtonPressed);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShootingCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShootingCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AShootingCharacter::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &AShootingCharacter::LookUp);
+}
+
+void AShootingCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (Combat)
+	{
+		Combat->Character = this;
+	}
 }
 
 void AShootingCharacter::MoveForward(float Value)
@@ -85,6 +99,31 @@ void AShootingCharacter::Turn(float Value)
 void AShootingCharacter::LookUp(float Value)
 {
 	AddControllerPitchInput(Value);
+}
+
+void AShootingCharacter::EquipButtonPressed()
+{
+	if (Combat)
+	{
+		if (HasAuthority())
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			// calling the function from a client
+			// calling without the implementation, it is only for defining
+			ServerEquipButtonPressed();
+		}
+	}
+}
+
+void AShootingCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (Combat)
+	{
+		Combat->EquipWeapon(OverlappingWeapon);
+	}
 }
 
 void AShootingCharacter::SetOverlappingWeapon(AWeapon* Weapon)

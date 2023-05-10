@@ -30,7 +30,7 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	FRotator Rotation = ShootingCharacter->GetBaseAimRotation();
 	FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
-	Direction = CalculateDirection(Velocity, YawRotation);
+	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, YawRotation);
 
 	bIsInAir = ShootingCharacter->GetCharacterMovement()->IsFalling();
 
