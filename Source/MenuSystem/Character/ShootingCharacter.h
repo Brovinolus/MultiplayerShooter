@@ -26,6 +26,12 @@ protected:
 	void Turn(float Value);
 	void LookUp(float Value);
 	void EquipButtonPressed();
+	void CrouchButtonPressed();
+	void AimButtonPressed();
+	void AimButtonReleased();
+	void AimOffset(float DeltaTime);
+	//void WalkButtonPressed();
+	//void WalkButtonReleased();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -48,7 +54,14 @@ private:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+	
+	float AimingYawRotation;
+	float AimingPitchRotation;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
+	bool IsWeaponEquipped();
+	bool IsAiming();
+	float GetAimingYawRotation();
+	float GetAimingPitchRotation();
 };

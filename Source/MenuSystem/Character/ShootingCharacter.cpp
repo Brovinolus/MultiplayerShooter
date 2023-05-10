@@ -4,6 +4,7 @@
 #include "ShootingCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "MenuSystem/ShooterComponents/CombatComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -30,6 +31,10 @@ AShootingCharacter::AShootingCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCharacterMovement()->NavAgentProps.bCanFly = false;
+	GetCharacterMovement()->AirControl = false;
 }
 
 void AShootingCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -47,6 +52,8 @@ void AShootingCharacter::BeginPlay()
 void AShootingCharacter::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AimOffset(DeltaTime);
 }
 
 void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -55,6 +62,11 @@ void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AShootingCharacter::EquipButtonPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShootingCharacter::CrouchButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AShootingCharacter::AimButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AShootingCharacter::AimButtonReleased);
+	//PlayerInputComponent->BindAction("Walk", IE_Pressed, this, &AShootingCharacter::WalkButtonPressed);
+	//PlayerInputComponent->BindAction("Walk", IE_Released, this, &AShootingCharacter::WalkButtonReleased);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShootingCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShootingCharacter::MoveRight);
@@ -118,6 +130,59 @@ void AShootingCharacter::EquipButtonPressed()
 	}
 }
 
+void AShootingCharacter::CrouchButtonPressed()
+{
+	if(GetCharacterMovement()->IsFalling()) return;
+	
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();
+	}
+}
+
+void AShootingCharacter::AimButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(true);
+	}
+}
+
+void AShootingCharacter::AimButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(false);
+	}
+}
+
+void AShootingCharacter::AimOffset(float DeltaTime)
+{
+	
+}
+
+/*
+void AShootingCharacter::WalkButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->SetWalking(true);
+	}
+}
+
+void AShootingCharacter::WalkButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->SetWalking(false);
+	}
+}
+*/
+
 void AShootingCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
@@ -144,6 +209,26 @@ void AShootingCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+}
+
+bool AShootingCharacter::IsWeaponEquipped()
+{
+	return (Combat && Combat->EquippedWeapon);
+}
+
+bool AShootingCharacter::IsAiming()
+{
+	return (Combat && Combat->bAiming);
+}
+
+float AShootingCharacter::GetAimingYawRotation()
+{
+	return (Combat && Combat->AimingYawRotation);
+}
+
+float AShootingCharacter::GetAimingPitchRotation()
+{
+	return (Combat && Combat->AimingYawRotation);
 }
 
 void AShootingCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

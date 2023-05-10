@@ -33,7 +33,10 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, YawRotation);
 
 	bIsInAir = ShootingCharacter->GetCharacterMovement()->IsFalling();
-
 	bIsAccelerating = ShootingCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
-	
+	bIsWeaponEquipped = ShootingCharacter->IsWeaponEquipped();
+	bIsCrouched = ShootingCharacter->bIsCrouched;
+	bIsAiming = ShootingCharacter->IsAiming();
+	AimingYawRotation = ShootingCharacter->GetAimingYawRotation();
+	AimingPitchRotation = ShootingCharacter->GetAimingPitchRotation();
 }
