@@ -57,11 +57,12 @@ private:
 	
 	float AimingYawRotation;
 	float AimingPitchRotation;
+	FRotator StartingAimRotation;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
-	float GetAimingYawRotation();
-	float GetAimingPitchRotation();
+	FORCEINLINE float GetAimingYawRotation() const { return AimingYawRotation; }
+	FORCEINLINE float GetAimingPitchRotation() const { return AimingPitchRotation; }
 };

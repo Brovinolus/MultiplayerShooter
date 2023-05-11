@@ -14,8 +14,6 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
-	//BaseWalkSpeed = 300.f;
-	//AimWalkSpeed = 300.f;
 }
 
 
@@ -50,71 +48,6 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 	}
 }
 
-/*
-void UCombatComponent::SetWalking(bool IsWalking)
-{
-	bWalking = IsWalking;
-	
-	if (IsWalking)
-	{
-		if (Character)
-		{
-			Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-		}
-	}
-	else
-	{
-		if (Character)
-		{
-			Character->GetCharacterMovement()->MaxWalkSpeed = BaseJogSpeed;
-		}
-	}
-}
-
-
-void UCombatComponent::ServerSetWalking_Implementation(bool IsWalking)
-{
-	bWalking = IsWalking;
-	
-	if (IsWalking)
-	{
-		if (Character)
-		{
-			Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-		}
-	}
-	else
-	{
-		if (Character)
-		{
-			Character->GetCharacterMovement()->MaxWalkSpeed = BaseJogSpeed;
-		}
-	}
-}*/
-
-void UCombatComponent::SetAimingYawRotation(float AimingYaw)
-{
-	AimingYawRotation = AimingYaw;
-	
-	ServerSetAimingYawRotation(AimingYaw);
-}
-
-void UCombatComponent::SetAimingPitchRotation(float AimingPitch)
-{
-	AimingPitchRotation = AimingPitch;
-	ServerSetAimingPitchRotation(AimingPitch);
-}
-
-void UCombatComponent::ServerSetAimingPitchRotation_Implementation(float AimingPitch)
-{
-	AimingPitchRotation = AimingPitch;
-}
-
-void UCombatComponent::ServerSetAimingYawRotation_Implementation(float AimingYaw)
-{
-	AimingYawRotation = AimingYaw;
-}
-
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -127,9 +60,6 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
-	DOREPLIFETIME(UCombatComponent, AimingYawRotation);
-	DOREPLIFETIME(UCombatComponent, AimingPitchRotation);
-	//DOREPLIFETIME(UCombatComponent, bWalking);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)

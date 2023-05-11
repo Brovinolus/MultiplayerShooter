@@ -9,6 +9,7 @@
 #include "MenuSystem/ShooterComponents/CombatComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MenuSystem/Weapon/Weapon.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AShootingCharacter::AShootingCharacter()
 {
@@ -65,8 +66,6 @@ void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShootingCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AShootingCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AShootingCharacter::AimButtonReleased);
-	//PlayerInputComponent->BindAction("Walk", IE_Pressed, this, &AShootingCharacter::WalkButtonPressed);
-	//PlayerInputComponent->BindAction("Walk", IE_Released, this, &AShootingCharacter::WalkButtonReleased);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShootingCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShootingCharacter::MoveRight);
@@ -162,26 +161,32 @@ void AShootingCharacter::AimButtonReleased()
 
 void AShootingCharacter::AimOffset(float DeltaTime)
 {
-	
-}
+	if (Combat && Combat->EquippedWeapon == nullptr) return;
 
-/*
-void AShootingCharacter::WalkButtonPressed()
-{
-	if (Combat)
-	{
-		Combat->SetWalking(true);
-	}
-}
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
 
-void AShootingCharacter::WalkButtonReleased()
-{
-	if (Combat)
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (!bIsInAir) //Speed == 0.f && 
 	{
-		Combat->SetWalking(false);
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(
+			CurrentAimRotation, StartingAimRotation);
+
+		AimingYawRotation = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
 	}
+
+	if (bIsInAir) //Speed > 0.f || 
+	{
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AimingYawRotation = 0.f;
+	}
+
+	AimingPitchRotation = GetBaseAimRotation().Pitch;
 }
-*/
 
 void AShootingCharacter::ServerEquipButtonPressed_Implementation()
 {
@@ -219,16 +224,6 @@ bool AShootingCharacter::IsWeaponEquipped()
 bool AShootingCharacter::IsAiming()
 {
 	return (Combat && Combat->bAiming);
-}
-
-float AShootingCharacter::GetAimingYawRotation()
-{
-	return (Combat && Combat->AimingYawRotation);
-}
-
-float AShootingCharacter::GetAimingPitchRotation()
-{
-	return (Combat && Combat->AimingYawRotation);
 }
 
 void AShootingCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
