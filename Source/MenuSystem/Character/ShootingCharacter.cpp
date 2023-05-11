@@ -145,7 +145,7 @@ void AShootingCharacter::CrouchButtonPressed()
 
 void AShootingCharacter::AimButtonPressed()
 {
-	if (Combat)
+	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->SetAiming(true);
 	}
@@ -161,7 +161,8 @@ void AShootingCharacter::AimButtonReleased()
 
 void AShootingCharacter::AimOffset(float DeltaTime)
 {
-	if (Combat && Combat->EquippedWeapon == nullptr) return;
+	// Same in the character animation blueprint
+	if (Combat && Combat->EquippedWeapon == nullptr || !IsAiming()) return;
 
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
@@ -170,22 +171,40 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
 	if (!bIsInAir) //Speed == 0.f && 
-	{
+		{
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(
 			CurrentAimRotation, StartingAimRotation);
 
 		AimingYawRotation = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
-	}
+		}
 
 	if (bIsInAir) //Speed > 0.f || 
-	{
+		{
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AimingYawRotation = 0.f;
+		}
+
+	// it behaves not as intended because of compression (look up bitwise operations)
+	// the value for the pitch was put into an unsigned form
+	AimingPitchRotation = GetBaseAimRotation().Pitch;
+
+	if (AimingPitchRotation > 90.f && !IsLocallyControlled())
+	{
+		// map pitch from [270, 360) to [-90, 0)
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		AimingPitchRotation = FMath::GetMappedRangeValueClamped(
+			InRange, OutRange, AimingPitchRotation);
 	}
 
-	AimingPitchRotation = GetBaseAimRotation().Pitch;
+	// get the data that server gets from the client
+	/*
+	if (HasAuthority() && !IsLocallyControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AimingPitchRotation: %f"), AimingPitchRotation);
+	}*/
 }
 
 void AShootingCharacter::ServerEquipButtonPressed_Implementation()
