@@ -65,4 +65,5 @@ public:
 	bool IsAiming();
 	FORCEINLINE float GetAimingYawRotation() const { return AimingYawRotation; }
 	FORCEINLINE float GetAimingPitchRotation() const { return AimingPitchRotation; }
+	TObjectPtr<AWeapon> GetEquippedWeapon();
 };

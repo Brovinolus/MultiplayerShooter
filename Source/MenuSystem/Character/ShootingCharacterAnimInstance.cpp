@@ -5,6 +5,7 @@
 #include "KismetAnimationLibrary.h"
 #include "ShootingCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "MenuSystem/Weapon/Weapon.h"
 
 void UShootingCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -35,8 +36,25 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsInAir = ShootingCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = ShootingCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
 	bIsWeaponEquipped = ShootingCharacter->IsWeaponEquipped();
+	EquippedWeapon = ShootingCharacter->GetEquippedWeapon();
 	bIsCrouched = ShootingCharacter->bIsCrouched;
 	bIsAiming = ShootingCharacter->IsAiming();
 	AimingYawRotation = ShootingCharacter->GetAimingYawRotation();
 	AimingPitchRotation = ShootingCharacter->GetAimingPitchRotation();
+
+	if(bIsWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && ShootingCharacter->GetMesh())
+	{
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
+			FName("LeftHandSocket"), RTS_World);
+
+		FVector OutPosition;
+		FRotator OutRotation;
+		
+		ShootingCharacter->GetMesh()->TransformToBoneSpace(
+			FName("hand_r"), LeftHandTransform.GetLocation(),
+			FRotator::ZeroRotator, OutPosition, OutRotation);
+
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 }

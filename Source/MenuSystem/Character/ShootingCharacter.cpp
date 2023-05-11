@@ -258,5 +258,11 @@ void AShootingCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	}
 }
 
+TObjectPtr<AWeapon> AShootingCharacter::GetEquippedWeapon()
+{
+	if (Combat == nullptr) return nullptr;
+	return Combat->EquippedWeapon;
+}
+
 
 
