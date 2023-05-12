@@ -5,6 +5,8 @@
 #include "KismetAnimationLibrary.h"
 #include "ShootingCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "MenuSystem/ShooterComponents/CombatComponent.h"
 #include "MenuSystem/Weapon/Weapon.h"
 
 void UShootingCharacterAnimInstance::NativeInitializeAnimation()
@@ -39,6 +41,28 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	EquippedWeapon = ShootingCharacter->GetEquippedWeapon();
 	bIsCrouched = ShootingCharacter->bIsCrouched;
 	bIsAiming = ShootingCharacter->IsAiming();
+	TurningInPlace = ShootingCharacter->GetTurningInPlace();
+
+	// Offset Yaw for Strafing
+	FRotator AimRotation = ShootingCharacter->GetBaseAimRotation();
+	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShootingCharacter->GetVelocity());
+	YawOffset = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
+
+	// Leaning
+	CharacterRotationLastFrame = CharacterRotation;
+	CharacterRotation = ShootingCharacter->GetActorRotation();
+	const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(
+		CharacterRotation, CharacterRotationLastFrame);
+	const float Target = Delta.Yaw / DeltaSeconds;
+	const  float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 6.f);
+	Lean = FMath::Clamp(Interp, -90.f, 90.f);
+	
+	float MaxSpeed = ShootingCharacter->GetBaseWalkSpeed();
+	// alpha from 0 to 0.5
+	AlphaMoveSpeed = UKismetMathLibrary::MapRangeClamped(
+	Speed, 0.f, MaxSpeed, 0.f, 0.5f);
+
+	// Aim Offsets
 	AimingYawRotation = ShootingCharacter->GetAimingYawRotation();
 	AimingPitchRotation = ShootingCharacter->GetAimingPitchRotation();
 

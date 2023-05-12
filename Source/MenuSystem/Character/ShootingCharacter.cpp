@@ -33,9 +33,17 @@ AShootingCharacter::AShootingCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
+	if(Combat)
+	{
+		BaseWalkSpeed = Combat->BaseWalkSpeed;
+		AimWalkSpeed = Combat->AimWalkSpeed;
+	}
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->NavAgentProps.bCanFly = false;
 	GetCharacterMovement()->AirControl = false;
+
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
 void AShootingCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -145,7 +153,7 @@ void AShootingCharacter::CrouchButtonPressed()
 
 void AShootingCharacter::AimButtonPressed()
 {
-	if (Combat && Combat->EquippedWeapon)
+	if (Combat)
 	{
 		Combat->SetAiming(true);
 	}
@@ -161,8 +169,7 @@ void AShootingCharacter::AimButtonReleased()
 
 void AShootingCharacter::AimOffset(float DeltaTime)
 {
-	// Same in the character animation blueprint
-	if (Combat && Combat->EquippedWeapon == nullptr || !IsAiming()) return;
+	// (Combat && Combat->EquippedWeapon == nullptr) return;
 
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
@@ -170,21 +177,24 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
-	if (!bIsInAir) //Speed == 0.f && 
-		{
+	if (Speed == 0.f && !bIsInAir) //Speed == 0.f && 
+	{
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(
 			CurrentAimRotation, StartingAimRotation);
 
 		AimingYawRotation = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
-		}
+		TurnInPlace(DeltaTime);
+	}
 
-	if (bIsInAir) //Speed > 0.f || 
-		{
+	if (Speed > 0.f || bIsInAir) //Speed > 0.f || 
+	{
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AimingYawRotation = 0.f;
-		}
+		bUseControllerRotationYaw = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	}
 
 	// it behaves not as intended because of compression (look up bitwise operations)
 	// the value for the pitch was put into an unsigned form
@@ -205,6 +215,18 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AimingPitchRotation: %f"), AimingPitchRotation);
 	}*/
+}
+
+void AShootingCharacter::TurnInPlace(float DeltaTime)
+{
+	if (AimingYawRotation > 90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Right;
+	}
+	else if(AimingYawRotation < -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Left;
+	}
 }
 
 void AShootingCharacter::ServerEquipButtonPressed_Implementation()

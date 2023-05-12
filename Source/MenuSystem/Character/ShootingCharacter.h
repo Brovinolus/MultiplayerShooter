@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "MenuSystem/ShooterTypes/TurningInPlace.h"
 #include "ShootingCharacter.generated.h"
 
 UCLASS()
@@ -59,6 +60,12 @@ private:
 	float AimingPitchRotation;
 	FRotator StartingAimRotation;
 
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
+
+	float BaseWalkSpeed;
+	float AimWalkSpeed;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -66,4 +73,7 @@ public:
 	FORCEINLINE float GetAimingYawRotation() const { return AimingYawRotation; }
 	FORCEINLINE float GetAimingPitchRotation() const { return AimingPitchRotation; }
 	TObjectPtr<AWeapon> GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FORCEINLINE float GetBaseWalkSpeed() const { return BaseWalkSpeed; }
+	FORCEINLINE float GetAimWalkSpeed() const { return AimWalkSpeed; }
 };
