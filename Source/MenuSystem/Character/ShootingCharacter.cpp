@@ -71,7 +71,7 @@ void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShootingCharacter::Jump);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AShootingCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShootingCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AShootingCharacter::AimButtonPressed);
@@ -222,6 +222,18 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AimingPitchRotation: %f"), AimingPitchRotation);
 	}*/
+}
+
+void AShootingCharacter::Jump()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Super::Jump();
+	}
 }
 
 void AShootingCharacter::TurnInPlace(float DeltaTime)
