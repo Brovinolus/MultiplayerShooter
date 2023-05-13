@@ -31,10 +31,6 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Velocity.Z = 0.f;
 	Speed = Velocity.Size();
 
-	FRotator Rotation = ShootingCharacter->GetBaseAimRotation();
-	FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
-	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, YawRotation);
-
 	bIsInAir = ShootingCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = ShootingCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
 	bIsWeaponEquipped = ShootingCharacter->IsWeaponEquipped();
@@ -43,11 +39,19 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsAiming = ShootingCharacter->IsAiming();
 	TurningInPlace = ShootingCharacter->GetTurningInPlace();
 
-	// Offset Yaw for Strafing
+	// Direction
+	FRotator Rotation = ShootingCharacter->GetBaseAimRotation();
+	FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, YawRotation);
+	UE_LOG(LogTemp, Warning, TEXT("Direction: %f"), Direction);
+
+	//Yaw Offset for Strafing
 	FRotator AimRotation = ShootingCharacter->GetBaseAimRotation();
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShootingCharacter->GetVelocity());
-	YawOffset = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
-
+	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation);
+	//DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaSeconds, 5.f);
+	YawOffset = DeltaRot.Yaw;
+	
 	// Leaning
 	CharacterRotationLastFrame = CharacterRotation;
 	CharacterRotation = ShootingCharacter->GetActorRotation();
@@ -58,9 +62,9 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Lean = FMath::Clamp(Interp, -90.f, 90.f);
 	
 	float MaxSpeed = ShootingCharacter->GetBaseWalkSpeed();
-	// alpha from 0 to 0.5
+	// alpha from 0 to 0.4
 	AlphaMoveSpeed = UKismetMathLibrary::MapRangeClamped(
-	Speed, 0.f, MaxSpeed, 0.f, 0.5f);
+	Speed, 0.f, MaxSpeed, 0.f, 0.4f);
 
 	// Aim Offsets
 	AimingYawRotation = ShootingCharacter->GetAimingYawRotation();

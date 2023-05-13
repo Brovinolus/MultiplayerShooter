@@ -57,6 +57,7 @@ private:
 	void ServerEquipButtonPressed();
 	
 	float AimingYawRotation;
+	float InterpAimingYaw;
 	float AimingPitchRotation;
 	FRotator StartingAimRotation;
 

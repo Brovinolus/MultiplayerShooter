@@ -44,6 +44,8 @@ AShootingCharacter::AShootingCharacter()
 	GetCharacterMovement()->AirControl = false;
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	NetUpdateFrequency = 66.f;
+	MinNetUpdateFrequency = 33.f;
 }
 
 void AShootingCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -177,18 +179,23 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
-	if (Speed == 0.f && !bIsInAir) //Speed == 0.f && 
+	if (Speed == 0.f && !bIsInAir)
 	{
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(
 			CurrentAimRotation, StartingAimRotation);
-
 		AimingYawRotation = DeltaAimRotation.Yaw;
-		bUseControllerRotationYaw = false;
+
+		if (TurningInPlace == ETurningInPlace::ETIP_NotTurning)
+		{
+			InterpAimingYaw = AimingYawRotation;
+		}
+		
+		bUseControllerRotationYaw = true;
 		TurnInPlace(DeltaTime);
 	}
 
-	if (Speed > 0.f || bIsInAir) //Speed > 0.f || 
+	if (Speed > 0.f || bIsInAir)
 	{
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AimingYawRotation = 0.f;
@@ -219,13 +226,26 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 
 void AShootingCharacter::TurnInPlace(float DeltaTime)
 {
-	if (AimingYawRotation > 90.f)
+	UE_LOG(LogTemp, Warning, TEXT("Yaw: %f"), AimingYawRotation);
+	if (AimingYawRotation > 60.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
 	}
-	else if(AimingYawRotation < -90.f)
+	else if(AimingYawRotation < -60.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Left;
+	}
+
+	if (TurningInPlace != ETurningInPlace::ETIP_NotTurning)
+	{
+		InterpAimingYaw = FMath::FInterpTo(InterpAimingYaw, 0.f, DeltaTime, 4.f);
+		AimingYawRotation = InterpAimingYaw;
+
+		if (FMath::Abs(AimingYawRotation) < 5.f)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		}
 	}
 }
 
