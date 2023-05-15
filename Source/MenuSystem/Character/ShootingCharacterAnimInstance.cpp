@@ -43,7 +43,7 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	FRotator Rotation = ShootingCharacter->GetBaseAimRotation();
 	FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, YawRotation);
-	UE_LOG(LogTemp, Warning, TEXT("Direction: %f"), Direction);
+	//UE_LOG(LogTemp, Warning, TEXT("Direction: %f"), Direction);
 
 	//Yaw Offset for Strafing
 	FRotator AimRotation = ShootingCharacter->GetBaseAimRotation();

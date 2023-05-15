@@ -76,6 +76,8 @@ void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShootingCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AShootingCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AShootingCharacter::AimButtonReleased);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShootingCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShootingCharacter::FireButtonReleased);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShootingCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShootingCharacter::MoveRight);
@@ -89,6 +91,35 @@ void AShootingCharacter::PostInitializeComponents()
 	if (Combat)
 	{
 		Combat->Character = this;
+	}
+}
+
+void AShootingCharacter::PlayFireMontage(bool bAiming)
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && FireWeaponMontage)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FireWeaponMontage"));
+		AnimInstance->Montage_Play(FireWeaponMontage);
+	}
+}
+
+void AShootingCharacter::FireButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(true);
+	}
+}
+
+void AShootingCharacter::FireButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(false);
 	}
 }
 

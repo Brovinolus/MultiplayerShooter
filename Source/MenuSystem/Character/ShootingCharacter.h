@@ -18,6 +18,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	void PlayFireMontage(bool bAiming);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -32,8 +33,8 @@ protected:
 	void AimButtonReleased();
 	void AimOffset(float DeltaTime);
 	virtual void Jump() override;
-	//void WalkButtonPressed();
-	//void WalkButtonReleased();
+	void FireButtonPressed();
+	void FireButtonReleased();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -64,6 +65,9 @@ private:
 
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TObjectPtr<class UAnimMontage> FireWeaponMontage;
 
 	float BaseWalkSpeed;
 	float AimWalkSpeed;
