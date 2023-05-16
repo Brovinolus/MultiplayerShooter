@@ -9,6 +9,9 @@
 void AProjectileWeapon::FireWeapon(const FVector& HitTarget)
 {
 	Super::FireWeapon(HitTarget);
+
+	if (!HasAuthority()) return; 
+
 	APawn* InstigatiorPawn = Cast<APawn>(GetOwner());
 	const USkeletalMeshSocket* MuzzleSocket = GetWeaponMesh()->GetSocketByName(FName("Muzzle"));
 	if (MuzzleSocket)
