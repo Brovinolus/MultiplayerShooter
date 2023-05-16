@@ -46,6 +46,8 @@ AShootingCharacter::AShootingCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+	MaxAimingPitchAngle = 75.f;
+	AngleToTurn = 75.f;
 }
 
 void AShootingCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -202,8 +204,6 @@ void AShootingCharacter::AimButtonReleased()
 
 void AShootingCharacter::AimOffset(float DeltaTime)
 {
-	// (Combat && Combat->EquippedWeapon == nullptr) return;
-
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
 	float Speed = Velocity.Size();
@@ -238,6 +238,13 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 	// the value for the pitch was put into an unsigned form
 	AimingPitchRotation = GetBaseAimRotation().Pitch;
 
+	/*
+	if (AimingPitchRotation > MaxAimingPitchAngle || AimingPitchRotation < MaxAimingPitchAngle)
+	{
+		AimingPitchRotation = FMath::Clamp(AimingPitchRotation, -MaxAimingPitchAngle, MaxAimingPitchAngle);
+	}
+	*/
+
 	if (AimingPitchRotation > 90.f && !IsLocallyControlled())
 	{
 		// map pitch from [270, 360) to [-90, 0)
@@ -270,11 +277,11 @@ void AShootingCharacter::Jump()
 void AShootingCharacter::TurnInPlace(float DeltaTime)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Yaw: %f"), AimingYawRotation);
-	if (AimingYawRotation > 60.f)
+	if (AimingYawRotation > AngleToTurn)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
 	}
-	else if(AimingYawRotation < -60.f)
+	else if(AimingYawRotation < -AngleToTurn)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Left;
 	}

@@ -14,4 +14,10 @@ class MENUSYSTEM_API AProjectileWeapon : public AWeapon
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void FireWeapon(const FVector& HitTarget) override;
+	
+private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> ProjectileClass;
 };

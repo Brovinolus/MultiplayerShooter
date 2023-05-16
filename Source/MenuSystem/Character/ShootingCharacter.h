@@ -69,6 +69,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TObjectPtr<class UAnimMontage> FireWeaponMontage;
 
+	UPROPERTY(EditAnywhere, Category = TurningAnimation)
+	float AngleToTurn;
+
+	UPROPERTY(EditAnywhere, Category = AimingAnimation)
+	float MaxAimingPitchAngle;
+	
 	float BaseWalkSpeed;
 	float AimWalkSpeed;
 

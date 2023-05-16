@@ -21,7 +21,7 @@ UCombatComponent::UCombatComponent()
 	//bTickInEditor = true;
 	
 	BaseWalkSpeed = 600.f;
-	AimWalkSpeed = 450.f;
+	AimWalkSpeed = 300.f;
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -36,8 +36,6 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("BeginPlay"));
-
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
@@ -48,8 +46,8 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
-
-	if (Character)
+	
+	if (Character && !Character->bIsCrouched)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
@@ -70,7 +68,14 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 	if (bFireButtonPressed)
 	{
-		ServerFire();
+		FVector Velocity = Character->GetVelocity();
+		Velocity.Z = 0.f;
+		float Speed = Velocity.Size();
+		
+		if(Speed == 0.f || bAiming)
+		{
+			ServerFire();
+		}
 	}
 }
 
@@ -107,9 +112,11 @@ void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
+			HitTarget = End;
 		}
 		else
 		{
+			HitTarget = TraceHitResult.ImpactPoint;
 			DrawDebugSphere(
 				GetWorld(),
 				TraceHitResult.ImpactPoint,
@@ -132,7 +139,7 @@ void UCombatComponent::MulticastFire_Implementation()
 	if (Character)
 	{
 		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->FireWeapon();
+		EquippedWeapon->FireWeapon(HitTarget);
 	}
 }
 
