@@ -269,7 +269,7 @@ void AShootingCharacter::Jump()
 
 void AShootingCharacter::TurnInPlace(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Yaw: %f"), AimingYawRotation);
+	//UE_LOG(LogTemp, Warning, TEXT("Yaw: %f"), AimingYawRotation);
 	if (AimingYawRotation > 60.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
