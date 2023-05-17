@@ -356,5 +356,11 @@ TObjectPtr<AWeapon> AShootingCharacter::GetEquippedWeapon()
 	return Combat->EquippedWeapon;
 }
 
+FVector AShootingCharacter::GetHitTarget() const
+{
+	if (Combat == nullptr) return FVector();
+	return Combat->HitTarget;
+}
+
 
 

@@ -42,8 +42,12 @@ protected:
 	
 	void TraceToShoot(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
+
 private:
 	TObjectPtr<AShootingCharacter> Character;
+	TObjectPtr<class AShooterPlayerController> Controller;
+	TObjectPtr<class AShooterHUD> HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
@@ -58,4 +62,8 @@ private:
 	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
+
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactor;
+	FVector HitTarget;
 };

@@ -6,7 +6,6 @@
 #include "ShootingCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "MenuSystem/ShooterComponents/CombatComponent.h"
 #include "MenuSystem/Weapon/Weapon.h"
 
 void UShootingCharacterAnimInstance::NativeInitializeAnimation()
@@ -72,17 +71,42 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if(bIsWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && ShootingCharacter->GetMesh())
 	{
+		// Left hand
 		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
 			FName("LeftHandSocket"), RTS_World);
-
 		FVector OutPosition;
 		FRotator OutRotation;
-		
 		ShootingCharacter->GetMesh()->TransformToBoneSpace(
-			FName("hand_r"), LeftHandTransform.GetLocation(),
+			FName("weapon_r"), LeftHandTransform.GetLocation(),
 			FRotator::ZeroRotator, OutPosition, OutRotation);
-
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+		// Right hand transform
+		FTransform RightHandTransform = ShootingCharacter->GetMesh()->GetSocketTransform(
+			FName("weapon_r"), RTS_World);
+
+		if(ShootingCharacter->IsLocallyControlled())
+		{
+			bLocallyControlled = true;
+			
+			// Right hand rotation
+			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(
+				RightHandTransform.GetLocation(), ShootingCharacter->GetHitTarget());
+
+			// weapon rotation
+			FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
+				FName("Muzzle", RTS_World));
+
+			FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetUnitAxis(EAxis::X));
+
+			DrawDebugLine(
+				GetWorld(), MuzzleTipTransform.GetLocation(),
+				MuzzleTipTransform.GetLocation() + MuzzleX * 1000.f, FColor::Red);
+
+			DrawDebugLine(
+				GetWorld(), MuzzleTipTransform.GetLocation(),
+				ShootingCharacter->GetHitTarget(), FColor::Green);
+		}
 	}
 }

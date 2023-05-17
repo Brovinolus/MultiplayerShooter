@@ -88,4 +88,5 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FORCEINLINE float GetBaseWalkSpeed() const { return BaseWalkSpeed; }
 	FORCEINLINE float GetAimWalkSpeed() const { return AimWalkSpeed; }
+	FVector GetHitTarget() const;
 };

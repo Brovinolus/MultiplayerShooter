@@ -28,6 +28,24 @@ public:
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void FireWeapon(const FVector& HitTarget);
 
+	/*
+	 * Textures for the weapon crosshairs
+	 */
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	TObjectPtr<UTexture2D> CrosshairsCenter;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	TObjectPtr<UTexture2D> CrosshairsLeft;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	TObjectPtr<UTexture2D> CrosshairsRight;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	TObjectPtr<UTexture2D> CrosshairsTop;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	TObjectPtr<UTexture2D> CrosshairsBottom;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -68,7 +86,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TObjectPtr<UAnimationAsset> FireAnimation;
-	
+
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE TObjectPtr<USphereComponent> GetAreaSphere() const { return AreaSphere; }
