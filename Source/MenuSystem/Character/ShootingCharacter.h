@@ -67,7 +67,7 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	TObjectPtr<class UAnimMontage> FireWeaponMontage;
+	TObjectPtr<UAnimMontage> FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = TurningAnimation)
 	float AngleToTurn;
@@ -77,6 +77,10 @@ private:
 	
 	float BaseWalkSpeed;
 	float AimWalkSpeed;
+
+	void HideCharacterIfCameraClose();
+	UPROPERTY(EditAnywhere)
+	float CameraHideThreshold = 200.f;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -89,4 +93,5 @@ public:
 	FORCEINLINE float GetBaseWalkSpeed() const { return BaseWalkSpeed; }
 	FORCEINLINE float GetAimWalkSpeed() const { return AimWalkSpeed; }
 	FVector GetHitTarget() const;
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };

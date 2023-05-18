@@ -13,6 +13,7 @@ void AShooterHUD::DrawHUD()
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 		const FVector2D ViewportCenter(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+		//FVector2D ViewportCenter(CrosshairOffset.X,CrosshairOffset.Y);
 
 		float SpreadScaled = CrosshairSpreadMax * HUDPackage.CrosshairSpread;
 

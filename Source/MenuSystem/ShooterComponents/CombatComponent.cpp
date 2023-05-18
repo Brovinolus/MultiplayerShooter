@@ -3,6 +3,7 @@
 
 #include "CombatComponent.h"
 
+#include "Camera/CameraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -40,6 +41,15 @@ void UCombatComponent::BeginPlay()
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+
+		if (Character->GetFollowCamera())
+		{
+			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+			
+			DefaultCameraLocation = Character->GetFollowCamera()->GetRelativeLocation();
+			CurrentCameraLocation = DefaultCameraLocation;
+		}
 	}
 }
 
@@ -47,12 +57,14 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	SetHUDCrosshairs(DeltaTime);
 	if(Character && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
 		TraceToShoot(HitResult);
 		HitTarget = HitResult.ImpactPoint;
+
+		SetHUDCrosshairs(DeltaTime);
+		InterpFOV(DeltaTime);
 	}
 }
 
@@ -100,7 +112,7 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			if (Character->GetCharacterMovement()->IsFalling())
 			{
 				CrosshairInAirFactor = FMath::FInterpTo(
-					CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
+					CrosshairInAirFactor, CrosshairInAirFactorTarget, DeltaTime, 2.25f);
 			}
 			else
 			{
@@ -108,10 +120,83 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 					CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
 			}
 
-			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
+			if (bAiming)
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, CrosshairAimFactorTarget, DeltaTime, 30.f);
+			}
+			else
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
+			}
+
+			CrosshairShootFactor = FMath::FInterpTo(CrosshairShootFactor, 0.f, DeltaTime, 40.f);
+
+			HUDPackage.CrosshairSpread =
+				CrosshairBaseValue +
+					CrosshairVelocityFactor +
+						CrosshairInAirFactor +
+							CrosshairAimFactor +
+								CrosshairShootFactor;
+
+			/*
+			APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+			if (PlayerController)
+			{
+				FVector WorldPosition = HitTarget; // The world position you want to convert
+
+				FVector2D ScreenPosition;
+				PlayerController->ProjectWorldLocationToScreen(WorldPosition, ScreenPosition);
+
+				// Use the ScreenPosition as needed
+				float ScreenX = ScreenPosition.X;
+				float ScreenY = ScreenPosition.Y;
+				HUD->SetCrosshairOffset(FVector2D(ScreenX, ScreenY));
+			}*/
 			
 			HUD->SetHUDPackage(HUDPackage);
 		}
+	}
+}
+
+void UCombatComponent::InterpFOV(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr) return;
+
+	if(bAiming)
+	{
+		CurrentFOV = FMath::FInterpTo(
+			CurrentFOV, EquippedWeapon->GetZoomedFOV(), DeltaTime, EquippedWeapon->GetZoomInterpSpeed());
+
+		if(Character && Character->bIsCrouched)
+		{
+			CurrentCameraLocation = FMath::VInterpTo(
+				CurrentCameraLocation,
+				EquippedWeapon->GetZoomedCrouchCameraLocation(),
+				DeltaTime,
+				EquippedWeapon->GetZoomInterpSpeed()
+			);
+		}
+		else
+		{
+			CurrentCameraLocation = FMath::VInterpTo(
+				CurrentCameraLocation,
+				EquippedWeapon->GetZoomedCameraLocation(),
+				DeltaTime,
+				EquippedWeapon->GetZoomInterpSpeed()
+			);
+		}
+	}
+	else
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed);
+		CurrentCameraLocation = FMath::VInterpTo(CurrentCameraLocation, DefaultCameraLocation, DeltaTime,
+													 EquippedWeapon->GetZoomInterpSpeed());
+	}
+
+	if(Character && Character->GetFollowCamera())
+	{
+		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
+		Character->GetFollowCamera()->SetRelativeLocation(CurrentCameraLocation);
 	}
 }
 
@@ -150,6 +235,11 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 			FHitResult HitResult;
 			TraceToShoot(HitResult);
 			ServerFire(HitResult.ImpactPoint);
+
+			if(EquippedWeapon)
+			{
+				CrosshairShootFactor = CrosshairShootFactorTarget;
+			}
 		}
 	}
 }
@@ -175,8 +265,15 @@ void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
 	if (bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;
-		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		
+		if (Character)
+		{
+			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+		}
 
+		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,
@@ -187,6 +284,65 @@ void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
 		if(!TraceHitResult.bBlockingHit) TraceHitResult.ImpactPoint = End;
 	}
 }
+
+/*
+void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
+{
+	FVector2D ViewPortSize;
+	if(GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewPortSize);
+	}
+
+	FVector2D CenterOfViewport(ViewPortSize.X / 2.f, ViewPortSize.Y/ 2.f);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CenterOfViewport,
+		CrosshairWorldPosition,
+		CrosshairWorldDirection
+	);
+	
+	if (bScreenToWorld)
+	{
+		FVector Start;
+		if(EquippedWeapon)
+		{
+			FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
+			FName("Muzzle", RTS_World));
+			Start = MuzzleTipTransform.GetLocation();
+		}
+		
+		if (Character)
+		{
+			//float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			//Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+			//DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
+		}
+
+		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		
+		FCollisionQueryParams TraceParams(FName(TEXT("Trace")), true, GetOwner());
+
+		// Perform the line trace
+		if (GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECC_Visibility, TraceParams))
+		{
+			// Check if the line trace hit something
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 16.f, 12, FColor::Red, false);
+			// Use the HitLocation as needed
+		}
+		
+		GetWorld()->LineTraceSingleByChannel(
+			TraceHitResult,
+			Start,
+			End,
+			ECC_Visibility
+		);
+
+		if(!TraceHitResult.bBlockingHit) TraceHitResult.ImpactPoint = End;
+	}
+}*/
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {

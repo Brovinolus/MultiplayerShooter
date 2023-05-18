@@ -67,6 +67,7 @@ void AShootingCharacter::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+	HideCharacterIfCameraClose();
 }
 
 void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -304,6 +305,20 @@ void AShootingCharacter::ServerEquipButtonPressed_Implementation()
 	if (Combat)
 	{
 		Combat->EquipWeapon(OverlappingWeapon);
+	}
+}
+
+void AShootingCharacter::HideCharacterIfCameraClose()
+{
+	if (!IsLocallyControlled()) return;
+
+	bool MeshVisibility = ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size()
+		< CameraHideThreshold) ? false : true; 
+	GetMesh()->SetVisibility(MeshVisibility);
+	
+	if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+	{
+		Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = !MeshVisibility;
 	}
 }
 

@@ -34,6 +34,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreadMax = 16.f;
+
+	//FVector2D CrosshairOffset = FVector2D(0.f, 0.f);
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
+	//FORCEINLINE void SetCrosshairOffset(FVector2D CrosshairOffsetLocation) { CrosshairOffset = CrosshairOffsetLocation; }
 };

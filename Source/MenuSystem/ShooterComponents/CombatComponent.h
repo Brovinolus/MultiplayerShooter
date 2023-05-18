@@ -62,8 +62,39 @@ private:
 	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
-
+	
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootFactor;
+
+	UPROPERTY(EditAnywhere)
+	float CrosshairBaseValue = 0.5f;
+	UPROPERTY(EditAnywhere)
+	float CrosshairInAirFactorTarget = 2.25f;
+	UPROPERTY(EditAnywhere)
+	float CrosshairAimFactorTarget = -0.6f;
+	UPROPERTY(EditAnywhere)
+	float CrosshairShootFactorTarget = 0.75f;
+	
 	FVector HitTarget;
+
+	/**
+	 * Aiming and FOV
+	 */
+
+	// Field of view when not aiming
+	float DefaultFOV;
+	FVector DefaultCameraLocation;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedFOV = 30.f;
+
+	float CurrentFOV;
+	FVector CurrentCameraLocation;
+	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
 };

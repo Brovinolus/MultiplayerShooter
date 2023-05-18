@@ -46,6 +46,21 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Crosshairs")
 	TObjectPtr<UTexture2D> CrosshairsBottom;
 
+	/**
+	 * Zoomed FOV while aiming
+	 */
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditAnywhere)
+	FVector ZoomedCameraLocation = FVector(8.5f, 0.f, 60.f);
+
+	UPROPERTY(EditAnywhere)
+	FVector ZoomedCrouchCameraLocation = FVector(0.f, 0.f, 20.f);
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed = 20.f;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -91,4 +106,8 @@ public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE TObjectPtr<USphereComponent> GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE TObjectPtr<USkeletalMeshComponent> GetWeaponMesh() const { return WeaponMesh;  }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE FVector3d GetZoomedCameraLocation() const { return ZoomedCameraLocation; }
+	FORCEINLINE FVector3d GetZoomedCrouchCameraLocation() const { return ZoomedCrouchCameraLocation; }
 };
