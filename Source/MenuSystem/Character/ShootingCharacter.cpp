@@ -3,13 +3,17 @@
 
 #include "ShootingCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "MenuSystem/ShooterComponents/CombatComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MenuSystem/Weapon/Weapon.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Sound/SoundCue.h"
+#include "MenuSystem/MenuSystem.h"
 
 AShootingCharacter::AShootingCharacter()
 {
@@ -38,10 +42,15 @@ AShootingCharacter::AShootingCharacter()
 		BaseWalkSpeed = Combat->BaseWalkSpeed;
 		AimWalkSpeed = Combat->AimWalkSpeed;
 	}
-
+	
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->NavAgentProps.bCanFly = false;
 	GetCharacterMovement()->AirControl = false;
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
@@ -107,6 +116,28 @@ void AShootingCharacter::PlayFireMontage(bool bAiming)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FireWeaponMontage"));
 		AnimInstance->Montage_Play(FireWeaponMontage);
+	}
+}
+
+void AShootingCharacter::PlayHitReactMontage()
+{
+	
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	bool bNotEmpty = HitReactMontage.Num() > 0;
+
+	if (bNotEmpty)
+	{
+		int32 RandomIndex = FMath::RandRange(0, HitReactMontage.Num() - 1);
+		UAnimMontage* RandomMontage = HitReactMontage[RandomIndex];
+
+		if (AnimInstance && RandomMontage)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("HitReactMontage"));
+			AnimInstance->Montage_Play(RandomMontage);
+		}
 	}
 }
 
@@ -298,6 +329,21 @@ void AShootingCharacter::TurnInPlace(float DeltaTime)
 			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		}
 	}
+}
+
+void AShootingCharacter::MulticastHit_Implementation(const FVector_NetQuantize& HitLocation)
+{
+	if(CharacterImpactParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CharacterImpactParticles, HitLocation);
+	}
+
+	if (CharacterImpactSounds)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, CharacterImpactSounds, HitLocation);
+	}
+	
+	PlayHitReactMontage();
 }
 
 void AShootingCharacter::ServerEquipButtonPressed_Implementation()

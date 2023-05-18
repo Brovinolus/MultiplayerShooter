@@ -19,6 +19,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit(const FVector_NetQuantize& ImpactPoint);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -35,6 +39,7 @@ protected:
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void PlayHitReactMontage();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -69,11 +74,20 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TObjectPtr<UAnimMontage> FireWeaponMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TArray<TObjectPtr<UAnimMontage>> HitReactMontage;
+
 	UPROPERTY(EditAnywhere, Category = TurningAnimation)
 	float AngleToTurn;
 
 	UPROPERTY(EditAnywhere, Category = AimingAnimation)
 	float MaxAimingPitchAngle;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UParticleSystem> CharacterImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class USoundCue> CharacterImpactSounds;
 	
 	float BaseWalkSpeed;
 	float AimWalkSpeed;

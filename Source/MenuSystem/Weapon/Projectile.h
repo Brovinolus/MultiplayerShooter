@@ -40,10 +40,12 @@ private:
 	TObjectPtr<class UParticleSystemComponent> TracerComponent;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UParticleSystem> ImpactParticles;
+	TObjectPtr<UParticleSystem> StoneImpactParticles;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<class USoundCue> ImpactSounds;
+	TObjectPtr<class USoundCue> StoneImpactSounds;
+
+	TObjectPtr<class AShootingCharacter> ShootingCharacter;
 public:	
 
 };
