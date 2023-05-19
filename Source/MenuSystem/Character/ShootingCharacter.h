@@ -40,6 +40,10 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
+	                   class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDHealth();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)

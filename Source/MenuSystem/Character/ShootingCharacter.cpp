@@ -72,10 +72,11 @@ void AShootingCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ShooterPlayerController = Cast<AShooterPlayerController>(Controller);
-	if (ShooterPlayerController)
+	UpdateHUDHealth();
+
+	if (HasAuthority())
 	{
-		ShooterPlayerController->SetHUDHealth(Health, MaxHealth);
+		OnTakeAnyDamage.AddDynamic(this, &AShootingCharacter::ReceiveDamage);
 	}
 }
 
@@ -341,6 +342,7 @@ void AShootingCharacter::TurnInPlace(float DeltaTime)
 
 void AShootingCharacter::MulticastHit_Implementation(const FVector_NetQuantize& HitLocation)
 {
+	/*
 	if(CharacterImpactParticles)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CharacterImpactParticles, HitLocation);
@@ -352,6 +354,7 @@ void AShootingCharacter::MulticastHit_Implementation(const FVector_NetQuantize& 
 	}
 	
 	PlayHitReactMontage();
+	*/
 }
 
 void AShootingCharacter::ServerEquipButtonPressed_Implementation()
@@ -369,16 +372,39 @@ void AShootingCharacter::HideCharacterIfCameraClose()
 	bool MeshVisibility = ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size()
 		< CameraHideThreshold) ? false : true; 
 	GetMesh()->SetVisibility(MeshVisibility);
+
+	UE_LOG(LogTemp, Warning, TEXT("Visible: %s"), MeshVisibility ? TEXT("true") : TEXT("false"));
 	
 	if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 	{
 		Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = !MeshVisibility;
+		Combat->EquippedWeapon->SetCanShowParticlesInFireAnimation(MeshVisibility);
 	}
+}
+
+void AShootingCharacter::ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
 }
 
 void AShootingCharacter::OnRep_Health()
 {
-	
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
+
+void AShootingCharacter::UpdateHUDHealth()
+{
+	ShooterPlayerController = ShooterPlayerController == nullptr
+								  ? Cast<AShooterPlayerController>(Controller)
+								  : ShooterPlayerController;
+	if (ShooterPlayerController)
+	{
+		ShooterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 
 void AShootingCharacter::SetOverlappingWeapon(AWeapon* Weapon)

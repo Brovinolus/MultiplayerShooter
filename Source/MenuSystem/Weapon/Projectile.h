@@ -26,6 +26,9 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse,
 		const FHitResult& Hit);
+
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
 	
 private:
 	UPROPERTY(EditAnywhere)
@@ -46,6 +49,4 @@ private:
 	TObjectPtr<class USoundCue> StoneImpactSounds;
 
 	TObjectPtr<class AShootingCharacter> ShootingCharacter;
-public:	
-
 };

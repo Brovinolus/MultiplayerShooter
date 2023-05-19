@@ -112,8 +112,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TObjectPtr<UAnimationAsset> FireAnimation;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	TObjectPtr<UAnimationAsset> FireAnimationWithoutParticles;
+
+	bool bCanShowParticlesInFireAnimation = true;
 public:
 	void SetWeaponState(EWeaponState State);
+	void SetCanShowParticlesInFireAnimation(bool bCanShowParticles);
 	FORCEINLINE TObjectPtr<USphereComponent> GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE TObjectPtr<USkeletalMeshComponent> GetWeaponMesh() const { return WeaponMesh;  }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }

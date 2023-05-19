@@ -95,6 +95,11 @@ void AWeapon::SetWeaponState(EWeaponState State)
 
 }
 
+void AWeapon::SetCanShowParticlesInFireAnimation(bool bCanShowParticles)
+{
+	bCanShowParticlesInFireAnimation = bCanShowParticles;
+}
+
 void AWeapon::OnRep_WeaponState()
 {
 	switch (WeaponState)
@@ -116,9 +121,16 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 
 void AWeapon::FireWeapon(const FVector& HitTarget)
 {
-	if (FireAnimation)
+	if (FireAnimationWithoutParticles)
 	{
-		WeaponMesh->PlayAnimation(FireAnimation, false);
+		if (bCanShowParticlesInFireAnimation)
+		{
+			WeaponMesh->PlayAnimation(FireAnimation, false);
+		}
+		else
+		{
+			WeaponMesh->PlayAnimation(FireAnimationWithoutParticles, false);
+		}
 	}
 }
 
