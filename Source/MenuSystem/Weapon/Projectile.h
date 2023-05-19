@@ -35,9 +35,9 @@ private:
 	TObjectPtr<class UProjectileMovementComponent> ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<class UParticleSystem> Tracer;
+	TObjectPtr<UParticleSystem> Tracer;
 	
-	TObjectPtr<class UParticleSystemComponent> TracerComponent;
+	TObjectPtr<UParticleSystemComponent> TracerComponent;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UParticleSystem> StoneImpactParticles;

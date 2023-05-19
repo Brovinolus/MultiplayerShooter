@@ -96,6 +96,21 @@ private:
 	UPROPERTY(EditAnywhere)
 	float CameraHideThreshold = 200.f;
 
+	/**
+	 * PlayerHealth
+	 */
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	float Health = 100.f;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	TObjectPtr<class AShooterPlayerController> ShooterPlayerController;
+	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

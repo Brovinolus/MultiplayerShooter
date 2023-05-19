@@ -13,5 +13,11 @@ UCLASS()
 class MENUSYSTEM_API AShooterPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
+public:
+	void SetHUDHealth(float Health, float MaxHealth);
+protected:
+	virtual void BeginPlay() override;
+private:
+	TObjectPtr<class AShooterHUD> ShooterHUD;
 };
