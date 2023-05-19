@@ -19,6 +19,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayDeathMontage();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void CharacterEliminated();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHit(const FVector_NetQuantize& ImpactPoint);
@@ -81,6 +85,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TArray<TObjectPtr<UAnimMontage>> HitReactMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TArray<TObjectPtr<UAnimMontage>> DeathMontage;
+
 	UPROPERTY(EditAnywhere, Category = TurningAnimation)
 	float AngleToTurn;
 
@@ -113,7 +120,8 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
-	TObjectPtr<class AShooterPlayerController> ShooterPlayerController;
+	TObjectPtr<class AShooterPlayerController> VictimController;
+	bool bCharacterEliminated = false;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -127,4 +135,5 @@ public:
 	FORCEINLINE float GetAimWalkSpeed() const { return AimWalkSpeed; }
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE bool IsCharacterEliminated() const { return bCharacterEliminated; }
 };

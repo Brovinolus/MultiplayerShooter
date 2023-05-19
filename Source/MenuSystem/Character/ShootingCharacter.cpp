@@ -7,13 +7,12 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "MenuSystem/ShooterComponents/CombatComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MenuSystem/Weapon/Weapon.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Sound/SoundCue.h"
 #include "MenuSystem/MenuSystem.h"
+#include "MenuSystem/GameModes/ShooterGameMode.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
 
 AShootingCharacter::AShootingCharacter()
@@ -130,22 +129,46 @@ void AShootingCharacter::PlayFireMontage(bool bAiming)
 
 void AShootingCharacter::PlayHitReactMontage()
 {
-	
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
-	bool bNotEmpty = HitReactMontage.Num() > 0;
-
-	if (bNotEmpty)
+	if (AnimInstance)
 	{
-		int32 RandomIndex = FMath::RandRange(0, HitReactMontage.Num() - 1);
-		UAnimMontage* RandomMontage = HitReactMontage[RandomIndex];
+		bool bNotEmpty = HitReactMontage.Num() > 0;
 
-		if (AnimInstance && RandomMontage)
+		if (bNotEmpty)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("HitReactMontage"));
-			AnimInstance->Montage_Play(RandomMontage);
+			int32 RandomIndex = FMath::RandRange(0, HitReactMontage.Num() - 1);
+			UAnimMontage* RandomMontage = HitReactMontage[RandomIndex];
+
+			if (RandomMontage)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("HitReactMontage"));
+				AnimInstance->Montage_Play(RandomMontage);
+			}
+		}
+	}
+}
+
+void AShootingCharacter::PlayDeathMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance)
+	{
+		bool bNotEmpty = DeathMontage.Num() > 0;
+
+		if (bNotEmpty)
+		{
+			int32 RandomIndex = FMath::RandRange(0, DeathMontage.Num() - 1);
+			UAnimMontage* RandomMontage = DeathMontage[RandomIndex];
+
+			if (RandomMontage)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("DeathMontage"));
+				AnimInstance->Montage_Play(RandomMontage);
+			}
 		}
 	}
 }
@@ -388,6 +411,25 @@ void AShootingCharacter::ReceiveDamage(AActor* DamageActor, float Damage, const 
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+
+	if(Health == 0.f)
+	{
+		AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+		if (ShooterGameMode)
+		{
+			VictimController = VictimController == nullptr
+				                          ? Cast<AShooterPlayerController>(Controller)
+				                          : VictimController;
+			AShooterPlayerController* AttackerController = Cast<AShooterPlayerController>(InstigatorController);
+			ShooterGameMode->PlayerEliminated(this, VictimController, AttackerController);
+		}
+	}
+}
+
+void AShootingCharacter::CharacterEliminated_Implementation()
+{
+	bCharacterEliminated = true;
+	PlayDeathMontage();
 }
 
 void AShootingCharacter::OnRep_Health()
@@ -398,12 +440,12 @@ void AShootingCharacter::OnRep_Health()
 
 void AShootingCharacter::UpdateHUDHealth()
 {
-	ShooterPlayerController = ShooterPlayerController == nullptr
+	VictimController = VictimController == nullptr
 								  ? Cast<AShooterPlayerController>(Controller)
-								  : ShooterPlayerController;
-	if (ShooterPlayerController)
+								  : VictimController;
+	if (VictimController)
 	{
-		ShooterPlayerController->SetHUDHealth(Health, MaxHealth);
+		VictimController->SetHUDHealth(Health, MaxHealth);
 	}
 }
 

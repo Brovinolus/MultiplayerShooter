@@ -37,6 +37,7 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsCrouched = ShootingCharacter->bIsCrouched;
 	bIsAiming = ShootingCharacter->IsAiming();
 	TurningInPlace = ShootingCharacter->GetTurningInPlace();
+	bCharacterEiliminated = ShootingCharacter->IsCharacterEliminated();
 
 	// Direction
 	FRotator Rotation = ShootingCharacter->GetBaseAimRotation();
