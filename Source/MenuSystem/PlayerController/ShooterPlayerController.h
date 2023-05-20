@@ -18,6 +18,7 @@ public:
 	void SetHUDHealth(float Health, float MaxHealth);
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
 private:
 	TObjectPtr<class AShooterHUD> ShooterHUD;
 };

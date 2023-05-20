@@ -5,7 +5,7 @@
 
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
-#include "MenuSystem/Character/ShootingCharacter.h"
+#include "..\Character\ShooterCharacter.h"
 #include "Net/UnrealNetwork.h"
 
 AWeapon::AWeapon()
@@ -63,7 +63,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SeepResult)
 {
-	AShootingCharacter* ShootingCharacter = Cast<AShootingCharacter>(OtherActor);
+	AShooterCharacter* ShootingCharacter = Cast<AShooterCharacter>(OtherActor);
 
 	if (ShootingCharacter)
 	{
@@ -74,7 +74,7 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	AShootingCharacter* ShootingCharacter = Cast<AShootingCharacter>(OtherActor);
+	AShooterCharacter* ShootingCharacter = Cast<AShooterCharacter>(OtherActor);
 
 	if (ShootingCharacter)
 	{

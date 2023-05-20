@@ -9,7 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MenuSystem/MenuSystem.h"
 #include "MenuSystem/Weapon/Weapon.h"
-#include "MenuSystem/Character/ShootingCharacter.h"
+#include "MenuSystem/Character/ShooterCharacter.h"
 #include "MenuSystem/HUD/ShooterHUD.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
 #include "Net/UnrealNetwork.h"

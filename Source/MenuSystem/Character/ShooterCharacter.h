@@ -5,15 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "MenuSystem/ShooterTypes/TurningInPlace.h"
-#include "ShootingCharacter.generated.h"
+#include "ShooterCharacter.generated.h"
 
 UCLASS()
-class AShootingCharacter : public ACharacter
+class AShooterCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AShootingCharacter();
+	AShooterCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;

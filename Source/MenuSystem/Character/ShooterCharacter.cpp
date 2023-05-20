@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ShootingCharacter.h"
+#include "ShooterCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
@@ -15,7 +15,7 @@
 #include "MenuSystem/GameModes/ShooterGameMode.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
 
-AShootingCharacter::AShootingCharacter()
+AShooterCharacter::AShooterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -59,15 +59,15 @@ AShootingCharacter::AShootingCharacter()
 	AngleToTurn = 75.f;
 }
 
-void AShootingCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(AShootingCharacter, OverlappingWeapon, COND_OwnerOnly);
-	DOREPLIFETIME(AShootingCharacter, Health);
+	DOREPLIFETIME_CONDITION(AShooterCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(AShooterCharacter, Health);
 }
 
-void AShootingCharacter::BeginPlay()
+void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -75,11 +75,11 @@ void AShootingCharacter::BeginPlay()
 
 	if (HasAuthority())
 	{
-		OnTakeAnyDamage.AddDynamic(this, &AShootingCharacter::ReceiveDamage);
+		OnTakeAnyDamage.AddDynamic(this, &AShooterCharacter::ReceiveDamage);
 	}
 }
 
-void AShootingCharacter::Tick(const float DeltaTime)
+void AShooterCharacter::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -87,25 +87,25 @@ void AShootingCharacter::Tick(const float DeltaTime)
 	HideCharacterIfCameraClose();
 }
 
-void AShootingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShootingCharacter::Jump);
-	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AShootingCharacter::EquipButtonPressed);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShootingCharacter::CrouchButtonPressed);
-	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AShootingCharacter::AimButtonPressed);
-	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AShootingCharacter::AimButtonReleased);
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShootingCharacter::FireButtonPressed);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShootingCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShooterCharacter::Jump);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AShooterCharacter::EquipButtonPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShooterCharacter::CrouchButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AShooterCharacter::AimButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AShooterCharacter::AimButtonReleased);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::FireButtonReleased);
 	
-	PlayerInputComponent->BindAxis("MoveForward", this, &AShootingCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AShootingCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("Turn", this, &AShootingCharacter::Turn);
-	PlayerInputComponent->BindAxis("LookUp", this, &AShootingCharacter::LookUp);
+	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("Turn", this, &AShooterCharacter::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &AShooterCharacter::LookUp);
 }
 
-void AShootingCharacter::PostInitializeComponents()
+void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	if (Combat)
@@ -114,7 +114,7 @@ void AShootingCharacter::PostInitializeComponents()
 	}
 }
 
-void AShootingCharacter::PlayFireMontage(bool bAiming)
+void AShooterCharacter::PlayFireMontage(bool bAiming)
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
@@ -122,12 +122,11 @@ void AShootingCharacter::PlayFireMontage(bool bAiming)
 
 	if (AnimInstance && FireWeaponMontage)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FireWeaponMontage"));
 		AnimInstance->Montage_Play(FireWeaponMontage);
 	}
 }
 
-void AShootingCharacter::PlayHitReactMontage()
+void AShooterCharacter::PlayHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
@@ -144,14 +143,13 @@ void AShootingCharacter::PlayHitReactMontage()
 
 			if (RandomMontage)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("HitReactMontage"));
 				AnimInstance->Montage_Play(RandomMontage);
 			}
 		}
 	}
 }
 
-void AShootingCharacter::PlayDeathMontage()
+void AShooterCharacter::PlayDeathMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -166,14 +164,13 @@ void AShootingCharacter::PlayDeathMontage()
 
 			if (RandomMontage)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("DeathMontage"));
 				AnimInstance->Montage_Play(RandomMontage);
 			}
 		}
 	}
 }
 
-void AShootingCharacter::FireButtonPressed()
+void AShooterCharacter::FireButtonPressed()
 {
 	if (Combat)
 	{
@@ -181,7 +178,7 @@ void AShootingCharacter::FireButtonPressed()
 	}
 }
 
-void AShootingCharacter::FireButtonReleased()
+void AShooterCharacter::FireButtonReleased()
 {
 	if (Combat)
 	{
@@ -189,7 +186,7 @@ void AShootingCharacter::FireButtonReleased()
 	}
 }
 
-void AShootingCharacter::MoveForward(float Value)
+void AShooterCharacter::MoveForward(float Value)
 {
 	if (Controller!=nullptr && Value != 0.f)
 	{
@@ -199,7 +196,7 @@ void AShootingCharacter::MoveForward(float Value)
 	}
 }
 
-void AShootingCharacter::MoveRight(float Value)
+void AShooterCharacter::MoveRight(float Value)
 {
 	if (Controller!=nullptr && Value != 0.f)
 	{
@@ -209,17 +206,17 @@ void AShootingCharacter::MoveRight(float Value)
 	}
 }
 
-void AShootingCharacter::Turn(float Value)
+void AShooterCharacter::Turn(float Value)
 {
 	AddControllerYawInput(Value);
 }
 
-void AShootingCharacter::LookUp(float Value)
+void AShooterCharacter::LookUp(float Value)
 {
 	AddControllerPitchInput(Value);
 }
 
-void AShootingCharacter::EquipButtonPressed()
+void AShooterCharacter::EquipButtonPressed()
 {
 	if (Combat)
 	{
@@ -236,7 +233,7 @@ void AShootingCharacter::EquipButtonPressed()
 	}
 }
 
-void AShootingCharacter::CrouchButtonPressed()
+void AShooterCharacter::CrouchButtonPressed()
 {
 	if(GetCharacterMovement()->IsFalling()) return;
 	
@@ -250,7 +247,7 @@ void AShootingCharacter::CrouchButtonPressed()
 	}
 }
 
-void AShootingCharacter::AimButtonPressed()
+void AShooterCharacter::AimButtonPressed()
 {
 	if (Combat)
 	{
@@ -258,7 +255,7 @@ void AShootingCharacter::AimButtonPressed()
 	}
 }
 
-void AShootingCharacter::AimButtonReleased()
+void AShooterCharacter::AimButtonReleased()
 {
 	if (Combat)
 	{
@@ -266,7 +263,7 @@ void AShootingCharacter::AimButtonReleased()
 	}
 }
 
-void AShootingCharacter::AimOffset(float DeltaTime)
+void AShooterCharacter::AimOffset(float DeltaTime)
 {
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
@@ -326,7 +323,7 @@ void AShootingCharacter::AimOffset(float DeltaTime)
 	}*/
 }
 
-void AShootingCharacter::Jump()
+void AShooterCharacter::Jump()
 {
 	if (bIsCrouched)
 	{
@@ -338,7 +335,7 @@ void AShootingCharacter::Jump()
 	}
 }
 
-void AShootingCharacter::TurnInPlace(float DeltaTime)
+void AShooterCharacter::TurnInPlace(float DeltaTime)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Yaw: %f"), AimingYawRotation);
 	if (AimingYawRotation > AngleToTurn)
@@ -363,7 +360,7 @@ void AShootingCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
-void AShootingCharacter::MulticastHit_Implementation(const FVector_NetQuantize& HitLocation)
+void AShooterCharacter::MulticastHit_Implementation(const FVector_NetQuantize& HitLocation)
 {
 	/*
 	if(CharacterImpactParticles)
@@ -380,7 +377,7 @@ void AShootingCharacter::MulticastHit_Implementation(const FVector_NetQuantize& 
 	*/
 }
 
-void AShootingCharacter::ServerEquipButtonPressed_Implementation()
+void AShooterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
 	{
@@ -388,7 +385,7 @@ void AShootingCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
-void AShootingCharacter::HideCharacterIfCameraClose()
+void AShooterCharacter::HideCharacterIfCameraClose()
 {
 	if (!IsLocallyControlled()) return;
 
@@ -396,7 +393,7 @@ void AShootingCharacter::HideCharacterIfCameraClose()
 		< CameraHideThreshold) ? false : true; 
 	GetMesh()->SetVisibility(MeshVisibility);
 
-	UE_LOG(LogTemp, Warning, TEXT("Visible: %s"), MeshVisibility ? TEXT("true") : TEXT("false"));
+	//UE_LOG(LogTemp, Warning, TEXT("Visible: %s"), MeshVisibility ? TEXT("true") : TEXT("false"));
 	
 	if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 	{
@@ -405,7 +402,7 @@ void AShootingCharacter::HideCharacterIfCameraClose()
 	}
 }
 
-void AShootingCharacter::ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
+void AShooterCharacter::ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatorController, AActor* DamageCauser)
 {
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
@@ -427,23 +424,23 @@ void AShootingCharacter::ReceiveDamage(AActor* DamageActor, float Damage, const 
 }
 
 // calling it in the GameMode, which means we are calling it on the server
-void AShootingCharacter::CharacterEliminated()
+void AShooterCharacter::CharacterEliminated()
 {
 	MulticastCharacterEliminated();
 	GetWorldTimerManager().SetTimer(
 		CharacterEliminatedTimer,
 		this,
-		&AShootingCharacter::CharacterEliminatedTimerFinished,
+		&AShooterCharacter::CharacterEliminatedTimerFinished,
 		CharacterEliminatedDelay);
 }
 
-void AShootingCharacter::MulticastCharacterEliminated_Implementation()
+void AShooterCharacter::MulticastCharacterEliminated_Implementation()
 {
 	bCharacterEliminated = true;
 	PlayDeathMontage();
 }
 
-void AShootingCharacter::CharacterEliminatedTimerFinished()
+void AShooterCharacter::CharacterEliminatedTimerFinished()
 {
 	AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
 	if (ShooterGameMode)
@@ -453,13 +450,13 @@ void AShootingCharacter::CharacterEliminatedTimerFinished()
 	}
 }
 
-void AShootingCharacter::OnRep_Health()
+void AShooterCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();
 	PlayHitReactMontage();
 }
 
-void AShootingCharacter::UpdateHUDHealth()
+void AShooterCharacter::UpdateHUDHealth()
 {
 	VictimController = VictimController == nullptr
 								  ? Cast<AShooterPlayerController>(Controller)
@@ -470,7 +467,7 @@ void AShootingCharacter::UpdateHUDHealth()
 	}
 }
 
-void AShootingCharacter::SetOverlappingWeapon(AWeapon* Weapon)
+void AShooterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if (IsLocallyControlled())
 	{
@@ -490,17 +487,17 @@ void AShootingCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 	}
 }
 
-bool AShootingCharacter::IsWeaponEquipped()
+bool AShooterCharacter::IsWeaponEquipped()
 {
 	return (Combat && Combat->EquippedWeapon);
 }
 
-bool AShootingCharacter::IsAiming()
+bool AShooterCharacter::IsAiming()
 {
 	return (Combat && Combat->bAiming);
 }
 
-void AShootingCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+void AShooterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
 	{
@@ -513,13 +510,13 @@ void AShootingCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	}
 }
 
-TObjectPtr<AWeapon> AShootingCharacter::GetEquippedWeapon()
+TObjectPtr<AWeapon> AShooterCharacter::GetEquippedWeapon()
 {
 	if (Combat == nullptr) return nullptr;
 	return Combat->EquippedWeapon;
 }
 
-FVector AShootingCharacter::GetHitTarget() const
+FVector AShooterCharacter::GetHitTarget() const
 {
 	if (Combat == nullptr) return FVector();
 	return Combat->HitTarget;

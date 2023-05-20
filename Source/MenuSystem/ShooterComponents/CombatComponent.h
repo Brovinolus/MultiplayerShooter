@@ -16,7 +16,7 @@ class MENUSYSTEM_API UCombatComponent : public UActorComponent
 
 public:	
 	UCombatComponent();
-	friend class AShootingCharacter;
+	friend class AShooterCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
@@ -46,7 +46,7 @@ protected:
 	void SetHUDCrosshairs(float DeltaTime);
 
 private:
-	TObjectPtr<AShootingCharacter> Character;
+	TObjectPtr<AShooterCharacter> Character;
 	TObjectPtr<class AShooterPlayerController> Controller;
 	TObjectPtr<class AShooterHUD> HUD;
 

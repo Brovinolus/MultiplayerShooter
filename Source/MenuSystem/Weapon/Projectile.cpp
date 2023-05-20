@@ -5,7 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "MenuSystem/Character/ShootingCharacter.h"
+#include "MenuSystem/Character/ShooterCharacter.h"
 #include "Sound/SoundCue.h"
 #include "MenuSystem/MenuSystem.h"
 
@@ -52,10 +52,10 @@ void AProjectile::BeginPlay()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	ShootingCharacter = Cast<AShootingCharacter>(OtherActor);
-	if (ShootingCharacter)
+	ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
+	if (ShooterCharacter)
 	{
-		ShootingCharacter->MulticastHit(Hit.ImpactPoint);
+		ShooterCharacter->MulticastHit(Hit.ImpactPoint);
 	}
 	
 	Destroy();
@@ -72,12 +72,12 @@ void AProjectile::Destroyed()
 {
 	Super::Destroyed();
 	
-	if (StoneImpactParticles && ShootingCharacter == nullptr)
+	if (StoneImpactParticles && ShooterCharacter == nullptr)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StoneImpactParticles, GetActorTransform());
 	}
 
-	if (StoneImpactSounds && ShootingCharacter == nullptr)
+	if (StoneImpactSounds && ShooterCharacter == nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, StoneImpactSounds, GetActorLocation());
 	}

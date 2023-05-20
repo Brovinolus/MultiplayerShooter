@@ -20,7 +20,7 @@ public:
 
 private:
 	UPROPERTY(BlueprintReadOnly, Category = Character, meta = (AllowPrivateAccess = true))
-	TObjectPtr<class AShootingCharacter> ShootingCharacter;
+	TObjectPtr<class AShooterCharacter> ShooterCharacter;
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	float Speed;
