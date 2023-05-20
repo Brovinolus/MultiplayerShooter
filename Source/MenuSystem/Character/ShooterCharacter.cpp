@@ -18,7 +18,7 @@
 AShootingCharacter::AShootingCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
 	CameraBoom->TargetArmLength = 500.f;
@@ -426,10 +426,31 @@ void AShootingCharacter::ReceiveDamage(AActor* DamageActor, float Damage, const 
 	}
 }
 
-void AShootingCharacter::CharacterEliminated_Implementation()
+// calling it in the GameMode, which means we are calling it on the server
+void AShootingCharacter::CharacterEliminated()
+{
+	MulticastCharacterEliminated();
+	GetWorldTimerManager().SetTimer(
+		CharacterEliminatedTimer,
+		this,
+		&AShootingCharacter::CharacterEliminatedTimerFinished,
+		CharacterEliminatedDelay);
+}
+
+void AShootingCharacter::MulticastCharacterEliminated_Implementation()
 {
 	bCharacterEliminated = true;
 	PlayDeathMontage();
+}
+
+void AShootingCharacter::CharacterEliminatedTimerFinished()
+{
+	AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+	if (ShooterGameMode)
+	{
+		// we check controller in the GameMode
+		ShooterGameMode->RequestRespawn(this, Controller);
+	}
 }
 
 void AShootingCharacter::OnRep_Health()

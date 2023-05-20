@@ -20,12 +20,14 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	void PlayDeathMontage();
-
-	UFUNCTION(NetMulticast, Reliable)
 	void CharacterEliminated();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastCharacterEliminated();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHit(const FVector_NetQuantize& ImpactPoint);
+
+	void UpdateHUDHealth();
 
 protected:
 	// Called when the game starts or when spawned
@@ -47,7 +49,6 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
 	                   class AController* InstigatorController, AActor* DamageCauser);
-	void UpdateHUDHealth();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -122,6 +123,13 @@ private:
 
 	TObjectPtr<class AShooterPlayerController> VictimController;
 	bool bCharacterEliminated = false;
+
+	FTimerHandle CharacterEliminatedTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float CharacterEliminatedDelay = 2.f;
+
+	void CharacterEliminatedTimerFinished();
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
