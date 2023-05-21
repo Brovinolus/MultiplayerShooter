@@ -426,6 +426,11 @@ void AShooterCharacter::ReceiveDamage(AActor* DamageActor, float Damage, const U
 // calling it in the GameMode, which means we are calling it on the server
 void AShooterCharacter::CharacterEliminated()
 {
+	if (Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->WeaponDropped();
+	}
+	
 	MulticastCharacterEliminated();
 	GetWorldTimerManager().SetTimer(
 		CharacterEliminatedTimer,
@@ -438,6 +443,17 @@ void AShooterCharacter::MulticastCharacterEliminated_Implementation()
 {
 	bCharacterEliminated = true;
 	PlayDeathMontage();
+
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+
+	if (ShooterPlayerController)
+	{
+		DisableInput(ShooterPlayerController);
+	}
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AShooterCharacter::CharacterEliminatedTimerFinished()

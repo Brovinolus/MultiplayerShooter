@@ -100,6 +100,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class USoundCue> CharacterImpactSounds;
+
+	TObjectPtr<class AShooterPlayerController> ShooterPlayerController;
 	
 	float BaseWalkSpeed;
 	float AimWalkSpeed;
@@ -127,7 +129,7 @@ private:
 	FTimerHandle CharacterEliminatedTimer;
 
 	UPROPERTY(EditDefaultsOnly)
-	float CharacterEliminatedDelay = 2.f;
+	float CharacterEliminatedDelay = 1.f;
 
 	void CharacterEliminatedTimerFinished();
 	
