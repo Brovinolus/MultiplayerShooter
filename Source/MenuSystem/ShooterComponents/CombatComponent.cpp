@@ -17,10 +17,13 @@
 
 UCombatComponent::UCombatComponent()
 {
-	RegisterComponent();
 	PrimaryComponentTick.bCanEverTick = true;
-	RegisterAllComponentTickFunctions(true);
 	PrimaryComponentTick.bStartWithTickEnabled = true;
+	
+	// causing a problem, cannot build
+	//RegisterComponent();
+	//RegisterAllComponentTickFunctions(true);
+	
 	//this->SetComponentTickEnabled(true);
 	//bTickInEditor = true;
 	
@@ -42,6 +45,16 @@ void UCombatComponent::BeginPlay()
 
 	if (Character)
 	{
+		/*
+		UWorld* World = Character->GetWorld();
+
+		if (ensure(World))
+		{
+			RegisterComponentWithWorld(World);
+			RegisterComponent();
+			RegisterAllComponentTickFunctions(true);
+		}*/
+		
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 
 		if (Character->GetFollowCamera())
@@ -204,7 +217,7 @@ void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
-		
+
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,

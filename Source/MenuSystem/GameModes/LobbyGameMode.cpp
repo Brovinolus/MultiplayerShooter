@@ -50,7 +50,7 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			}
 		}
 
-		if (NumberOfPlayers == 1)
+		if (NumberOfPlayers == 2)
 		{
 			UWorld* World = GetWorld();
 

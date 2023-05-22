@@ -33,15 +33,6 @@ AShooterCharacter::AShooterCharacter()
 
 	OverHeadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverHeadWidget"));
 	OverHeadWidget->SetupAttachment(RootComponent);
-
-	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	Combat->SetIsReplicated(true);
-
-	if(Combat)
-	{
-		BaseWalkSpeed = Combat->BaseWalkSpeed;
-		AimWalkSpeed = Combat->AimWalkSpeed;
-	}
 	
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->NavAgentProps.bCanFly = false;
@@ -57,6 +48,17 @@ AShooterCharacter::AShooterCharacter()
 	MinNetUpdateFrequency = 33.f;
 	MaxAimingPitchAngle = 75.f;
 	AngleToTurn = 75.f;
+	
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	Combat->SetIsReplicated(true);
+	//Combat->RegisterComponent();
+	//Combat->RegisterAllComponentTickFunctions(true);
+
+	if(Combat)
+	{
+		BaseWalkSpeed = Combat->BaseWalkSpeed;
+		AimWalkSpeed = Combat->AimWalkSpeed;
+	}
 }
 
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
