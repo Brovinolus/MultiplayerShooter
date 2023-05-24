@@ -48,5 +48,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class USoundCue> StoneImpactSounds;
 
+	UPROPERTY()
 	TObjectPtr<class AShooterCharacter> ShooterCharacter;
 };

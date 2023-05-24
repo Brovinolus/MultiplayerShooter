@@ -46,6 +46,7 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
+	void GetShooterPlayerState();
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
 	                   class AController* InstigatorController, AActor* DamageCauser);
@@ -101,11 +102,23 @@ private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class USoundCue> CharacterImpactSounds;
 
+	UPROPERTY()
 	TObjectPtr<class AShooterPlayerController> ShooterPlayerController;
+
+	UPROPERTY()
+	TObjectPtr<class AShooterPlayerState> ShooterPlayerState;
 	
 	float BaseWalkSpeed;
 	float AimWalkSpeed;
 
+	UPROPERTY(EditAnywhere)
+	float JumpDelay = 1.f;
+	bool bCanJump = true;
+	
+	FTimerHandle JumpTimer;
+	void StartJumpTimer();
+	void JumpTimerFinished();
+	
 	void HideCharacterIfCameraClose();
 	UPROPERTY(EditAnywhere)
 	float CameraHideThreshold = 200.f;
@@ -123,7 +136,8 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
-	TObjectPtr<class AShooterPlayerController> VictimController;
+	UPROPERTY()
+	TObjectPtr<AShooterPlayerController> VictimController;
 	bool bCharacterEliminated = false;
 
 	FTimerHandle CharacterEliminatedTimer;

@@ -19,4 +19,10 @@ public:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> HealthText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> KillCount;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> DeathCount;
 };

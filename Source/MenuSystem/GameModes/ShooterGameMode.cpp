@@ -7,10 +7,28 @@
 #include "Kismet/GameplayStatics.h"
 #include "MenuSystem/Character/ShooterCharacter.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
+#include "MenuSystem/ShooterState/ShooterPlayerState.h"
 
 void AShooterGameMode::PlayerEliminated(TObjectPtr<AShooterCharacter> EliminatedCharacter,
                                         TObjectPtr<AShooterPlayerController> VictimController, TObjectPtr<AShooterPlayerController> AttackerController)
 {
+	AShooterPlayerState* AttackerPlayerState = AttackerController
+		                                          ? Cast<AShooterPlayerState>(AttackerController->PlayerState)
+		                                          : nullptr;
+	AShooterPlayerState* VictimPlayerState = VictimController
+		                                         ? Cast<AShooterPlayerState>(VictimController->PlayerState)
+		                                         : nullptr;
+
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	{
+		AttackerPlayerState->AddToScore(1.f);
+	}
+
+	if (VictimPlayerState)
+	{
+		VictimPlayerState->AddToDeaths(1);
+	}
+	
 	if (EliminatedCharacter)
 	{
 		EliminatedCharacter->CharacterEliminated();

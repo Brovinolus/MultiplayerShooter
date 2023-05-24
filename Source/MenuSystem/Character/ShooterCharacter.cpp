@@ -14,6 +14,7 @@
 #include "MenuSystem/MenuSystem.h"
 #include "MenuSystem/GameModes/ShooterGameMode.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
+#include "MenuSystem/ShooterState/ShooterPlayerState.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -85,6 +86,7 @@ void AShooterCharacter::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	GetShooterPlayerState();
 	AimOffset(DeltaTime);
 	HideCharacterIfCameraClose();
 }
@@ -327,6 +329,8 @@ void AShooterCharacter::AimOffset(float DeltaTime)
 
 void AShooterCharacter::Jump()
 {
+	if(!bCanJump) return;
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -334,7 +338,26 @@ void AShooterCharacter::Jump()
 	else
 	{
 		Super::Jump();
+
+		bCanJump = false;
+	
+		StartJumpTimer();
 	}
+}
+
+void AShooterCharacter::StartJumpTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		JumpTimer,
+		this,
+		&AShooterCharacter::JumpTimerFinished,
+		JumpDelay
+	);
+}
+
+void AShooterCharacter::JumpTimerFinished()
+{
+	bCanJump = true;
 }
 
 void AShooterCharacter::TurnInPlace(float DeltaTime)
@@ -482,6 +505,20 @@ void AShooterCharacter::UpdateHUDHealth()
 	if (VictimController)
 	{
 		VictimController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
+void AShooterCharacter::GetShooterPlayerState()
+{
+	if (ShooterPlayerState == nullptr)
+	{
+		ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
+		
+		if (ShooterPlayerState)
+		{
+			ShooterPlayerState->AddToScore(0.f);
+			ShooterPlayerState->AddToDeaths(0);
+		}
 	}
 }
 

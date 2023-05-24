@@ -16,9 +16,12 @@ class MENUSYSTEM_API AShooterPlayerController : public APlayerController
 
 public:
 	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDKillsCount(float KillsCount);
+	void SetHUDDeaths(int32 Deaths);
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 private:
+	UPROPERTY()
 	TObjectPtr<class AShooterHUD> ShooterHUD;
 };
