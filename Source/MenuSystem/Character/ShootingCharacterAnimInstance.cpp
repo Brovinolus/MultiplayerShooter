@@ -39,6 +39,8 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	TurningInPlace = ShooterCharacter->GetTurningInPlace();
 	bCharacterEiliminated = ShooterCharacter->IsCharacterEliminated();
 
+	if(EquippedWeapon) 	WeaponType = EquippedWeapon->GetWeaponType();
+
 	// Direction
 	FRotator Rotation = ShooterCharacter->GetBaseAimRotation();
 	FRotator YawRotation(0.f, Rotation.Yaw, 0.f);

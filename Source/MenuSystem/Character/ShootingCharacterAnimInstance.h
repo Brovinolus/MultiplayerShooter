@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "MenuSystem/ShooterTypes/TurningInPlace.h"
+#include "MenuSystem/Weapon/Weapon.h"
 #include "ShootingCharacterAnimInstance.generated.h"
 
 /**
@@ -43,7 +44,8 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	bool bIsWeaponEquipped;
 
-	TObjectPtr<class AWeapon> EquippedWeapon;
+	UPROPERTY()
+	TObjectPtr<AWeapon> EquippedWeapon;
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	bool bIsCrouched;
@@ -56,6 +58,9 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	ETurningInPlace TurningInPlace;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	EWeaponType WeaponType;
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	float YawOffset;

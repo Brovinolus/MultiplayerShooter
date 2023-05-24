@@ -21,6 +21,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+	void SpawnDefaultWeapon();
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -89,17 +90,15 @@ private:
 
 	// Field of view when not aiming
 	float DefaultFOV;
-	FVector DefaultCameraLocation;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float ZoomedFOV = 30.f;
-
 	float CurrentFOV;
+	FVector DefaultCameraLocation;
 	FVector CurrentCameraLocation;
 	
 	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedFOV = 30.f;
+	UPROPERTY(EditAnywhere, Category = "Combat")
 	float ZoomInterpSpeed = 20.f;
-
+	
 	void InterpFOV(float DeltaTime);
 
 	/**
@@ -107,9 +106,13 @@ private:
 	*/
 	
 	FTimerHandle FireTimer;
-	
 	bool bCanFire = true;
-
 	void StartFireTimer();
 	void FireTimerFinished();
+
+	/**
+	* Default weapon
+	*/
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeapon;
 };

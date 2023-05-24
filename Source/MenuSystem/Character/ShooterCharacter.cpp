@@ -52,8 +52,6 @@ AShooterCharacter::AShooterCharacter()
 	
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
-	//Combat->RegisterComponent();
-	//Combat->RegisterAllComponentTickFunctions(true);
 
 	if(Combat)
 	{
@@ -453,7 +451,14 @@ void AShooterCharacter::CharacterEliminated()
 {
 	if (Combat && Combat->EquippedWeapon)
 	{
-		Combat->EquippedWeapon->WeaponDropped();
+		if (Combat->EquippedWeapon->bDestroyWeapon)
+		{
+			Combat->EquippedWeapon->Destroy();
+		}
+		else
+		{
+			Combat->EquippedWeapon->WeaponDropped();
+		}
 	}
 	
 	MulticastCharacterEliminated();
