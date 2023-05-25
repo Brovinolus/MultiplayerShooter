@@ -31,6 +31,8 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CollisionBox->IgnoreActorWhenMoving(GetOwner(), true);
+	
 	if (Tracer)
 	{
 		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
@@ -42,7 +44,7 @@ void AProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 			);
 	}
-
+	
 	if (HasAuthority())
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
