@@ -16,11 +16,12 @@ class MENUSYSTEM_API UCombatComponent : public UActorComponent
 
 public:	
 	UCombatComponent();
-	friend class AShootingCharacter;
+	friend class AShooterCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+	void SpawnDefaultWeapon();
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -46,8 +47,11 @@ protected:
 	void SetHUDCrosshairs(float DeltaTime);
 
 private:
-	TObjectPtr<AShootingCharacter> Character;
+	UPROPERTY()
+	TObjectPtr<AShooterCharacter> Character;
+	UPROPERTY()
 	TObjectPtr<class AShooterPlayerController> Controller;
+	UPROPERTY()
 	TObjectPtr<class AShooterHUD> HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
@@ -86,17 +90,15 @@ private:
 
 	// Field of view when not aiming
 	float DefaultFOV;
-	FVector DefaultCameraLocation;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float ZoomedFOV = 30.f;
-
 	float CurrentFOV;
+	FVector DefaultCameraLocation;
 	FVector CurrentCameraLocation;
 	
 	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedFOV = 30.f;
+	UPROPERTY(EditAnywhere, Category = "Combat")
 	float ZoomInterpSpeed = 20.f;
-
+	
 	void InterpFOV(float DeltaTime);
 
 	/**
@@ -104,9 +106,13 @@ private:
 	*/
 	
 	FTimerHandle FireTimer;
-	
 	bool bCanFire = true;
-
 	void StartFireTimer();
 	void FireTimerFinished();
+
+	/**
+	* Default weapon
+	*/
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeapon;
 };

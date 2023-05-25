@@ -9,18 +9,22 @@
 #include "Kismet/GameplayStatics.h"
 #include "MenuSystem/MenuSystem.h"
 #include "MenuSystem/Weapon/Weapon.h"
-#include "MenuSystem/Character/ShootingCharacter.h"
+#include "MenuSystem/Character/ShooterCharacter.h"
 #include "MenuSystem/HUD/ShooterHUD.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
+#include "MenuSystem/GameModes/ShooterGameMode.h"
 
 UCombatComponent::UCombatComponent()
 {
-	RegisterComponent();
 	PrimaryComponentTick.bCanEverTick = true;
-	RegisterAllComponentTickFunctions(true);
 	PrimaryComponentTick.bStartWithTickEnabled = true;
+	
+	// causing a problem, cannot build
+	//RegisterComponent();
+	//RegisterAllComponentTickFunctions(true);
+	
 	//this->SetComponentTickEnabled(true);
 	//bTickInEditor = true;
 	
@@ -39,7 +43,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	SpawnDefaultWeapon();
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
@@ -145,6 +149,15 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 
+	if (EquippedWeapon && EquippedWeapon->bDestroyWeapon)
+	{
+		EquippedWeapon->Destroy();
+	}
+	else if (EquippedWeapon)
+	{
+		EquippedWeapon->WeaponDropped();
+	}
+
 	EquippedWeapon = WeaponToEquip;
 
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
@@ -159,10 +172,30 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->bUseControllerRotationYaw = true;
 }
 
+void UCombatComponent::SpawnDefaultWeapon()
+{
+	AShooterGameMode* ShooterGameMode = Cast<AShooterGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+
+	if (ShooterGameMode && World && Character && !Character->IsCharacterEliminated() && DefaultWeapon)
+	{
+		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeapon);
+		StartingWeapon->bDestroyWeapon = true;
+		EquipWeapon(StartingWeapon);
+	}
+}
+
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
 	{
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
+		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}
@@ -193,11 +226,11 @@ void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
 		if (Character)
 		{
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
-			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 200.f);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
-		
+
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,
@@ -208,65 +241,6 @@ void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
 		if(!TraceHitResult.bBlockingHit) TraceHitResult.ImpactPoint = End;
 	}
 }
-
-/*
-void UCombatComponent::TraceToShoot(FHitResult& TraceHitResult)
-{
-	FVector2D ViewPortSize;
-	if(GEngine && GEngine->GameViewport)
-	{
-		GEngine->GameViewport->GetViewportSize(ViewPortSize);
-	}
-
-	FVector2D CenterOfViewport(ViewPortSize.X / 2.f, ViewPortSize.Y/ 2.f);
-	FVector CrosshairWorldPosition;
-	FVector CrosshairWorldDirection;
-	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
-		UGameplayStatics::GetPlayerController(this, 0),
-		CenterOfViewport,
-		CrosshairWorldPosition,
-		CrosshairWorldDirection
-	);
-	
-	if (bScreenToWorld)
-	{
-		FVector Start;
-		if(EquippedWeapon)
-		{
-			FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
-			FName("Muzzle", RTS_World));
-			Start = MuzzleTipTransform.GetLocation();
-		}
-		
-		if (Character)
-		{
-			//float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
-			//Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
-			//DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
-		}
-
-		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
-		
-		FCollisionQueryParams TraceParams(FName(TEXT("Trace")), true, GetOwner());
-
-		// Perform the line trace
-		if (GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECC_Visibility, TraceParams))
-		{
-			// Check if the line trace hit something
-			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 16.f, 12, FColor::Red, false);
-			// Use the HitLocation as needed
-		}
-		
-		GetWorld()->LineTraceSingleByChannel(
-			TraceHitResult,
-			Start,
-			End,
-			ECC_Visibility
-		);
-
-		if(!TraceHitResult.bBlockingHit) TraceHitResult.ImpactPoint = End;
-	}
-}*/
 
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
@@ -337,21 +311,6 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 						CrosshairInAirFactor +
 							CrosshairAimFactor +
 								CrosshairShootFactor;
-
-			/*
-			APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-			if (PlayerController)
-			{
-				FVector WorldPosition = HitTarget; // The world position you want to convert
-
-				FVector2D ScreenPosition;
-				PlayerController->ProjectWorldLocationToScreen(WorldPosition, ScreenPosition);
-
-				// Use the ScreenPosition as needed
-				float ScreenX = ScreenPosition.X;
-				float ScreenY = ScreenPosition.Y;
-				HUD->SetCrosshairOffset(FVector2D(ScreenX, ScreenY));
-			}*/
 			
 			HUD->SetHUDPackage(HUDPackage);
 		}

@@ -16,6 +16,13 @@ enum class EWeaponState:uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class EWeaponType:uint8
+{
+	EWT_Rifle UMETA(DisplayName = "Rifle"),
+	EWT_Pistol UMETA(DisplayName = "Pistol")
+};
+
 UCLASS()
 class MENUSYSTEM_API AWeapon : public AActor
 {
@@ -27,6 +34,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void FireWeapon(const FVector& HitTarget);
+	void WeaponDropped();
 
 	/*
 	 * Textures for the weapon crosshairs
@@ -71,6 +79,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	bool bAutomatic = true;
 
+	bool bDestroyWeapon = false;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -103,6 +113,9 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	EWeaponType WeaponType;
+	
 	UFUNCTION()
 	void OnRep_WeaponState();
 
@@ -112,12 +125,19 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TObjectPtr<UAnimationAsset> FireAnimation;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	TObjectPtr<UAnimationAsset> FireAnimationWithoutParticles;
+	
+
+	bool bCanShowParticlesInFireAnimation = true;
 public:
 	void SetWeaponState(EWeaponState State);
+	void SetCanShowParticlesInFireAnimation(bool bCanShowParticles);
 	FORCEINLINE TObjectPtr<USphereComponent> GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE TObjectPtr<USkeletalMeshComponent> GetWeaponMesh() const { return WeaponMesh;  }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE FVector3d GetZoomedCameraLocation() const { return ZoomedCameraLocation; }
 	FORCEINLINE FVector3d GetZoomedCrouchCameraLocation() const { return ZoomedCrouchCameraLocation; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 };

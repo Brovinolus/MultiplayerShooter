@@ -3,7 +3,7 @@
 
 #include "ShootingCharacterAnimInstance.h"
 #include "KismetAnimationLibrary.h"
-#include "ShootingCharacter.h"
+#include "ShooterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "MenuSystem/Weapon/Weapon.h"
@@ -12,87 +12,90 @@ void UShootingCharacterAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
-	ShootingCharacter = Cast<AShootingCharacter>(TryGetPawnOwner());
+	ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
 }
 
 void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	if (ShootingCharacter == nullptr)
+	if (ShooterCharacter == nullptr)
 	{
-		ShootingCharacter = Cast<AShootingCharacter>(TryGetPawnOwner());
+		ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
 	}
 
-	if(ShootingCharacter == nullptr) return;
+	if(ShooterCharacter == nullptr) return;
 
-	FVector Velocity = ShootingCharacter->GetVelocity();
+	FVector Velocity = ShooterCharacter->GetVelocity();
 	Velocity.Z = 0.f;
 	Speed = Velocity.Size();
 
-	bIsInAir = ShootingCharacter->GetCharacterMovement()->IsFalling();
-	bIsAccelerating = ShootingCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
-	bIsWeaponEquipped = ShootingCharacter->IsWeaponEquipped();
-	EquippedWeapon = ShootingCharacter->GetEquippedWeapon();
-	bIsCrouched = ShootingCharacter->bIsCrouched;
-	bIsAiming = ShootingCharacter->IsAiming();
-	TurningInPlace = ShootingCharacter->GetTurningInPlace();
+	bIsInAir = ShooterCharacter->GetCharacterMovement()->IsFalling();
+	bIsAccelerating = ShooterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
+	bIsWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
+	EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
+	bIsCrouched = ShooterCharacter->bIsCrouched;
+	bIsAiming = ShooterCharacter->IsAiming();
+	TurningInPlace = ShooterCharacter->GetTurningInPlace();
+	bCharacterEiliminated = ShooterCharacter->IsCharacterEliminated();
+
+	if(EquippedWeapon) 	WeaponType = EquippedWeapon->GetWeaponType();
 
 	// Direction
-	FRotator Rotation = ShootingCharacter->GetBaseAimRotation();
+	FRotator Rotation = ShooterCharacter->GetBaseAimRotation();
 	FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, YawRotation);
 	//UE_LOG(LogTemp, Warning, TEXT("Direction: %f"), Direction);
 
 	//Yaw Offset for Strafing
-	FRotator AimRotation = ShootingCharacter->GetBaseAimRotation();
-	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShootingCharacter->GetVelocity());
+	FRotator AimRotation = ShooterCharacter->GetBaseAimRotation();
+	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity());
 	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation);
 	//DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaSeconds, 5.f);
 	YawOffset = DeltaRot.Yaw;
 	
 	// Leaning
 	CharacterRotationLastFrame = CharacterRotation;
-	CharacterRotation = ShootingCharacter->GetActorRotation();
+	CharacterRotation = ShooterCharacter->GetActorRotation();
 	const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(
 		CharacterRotation, CharacterRotationLastFrame);
 	const float Target = Delta.Yaw / DeltaSeconds;
 	const  float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 6.f);
 	Lean = FMath::Clamp(Interp, -90.f, 90.f);
 	
-	float MaxSpeed = ShootingCharacter->GetBaseWalkSpeed();
+	float MaxSpeed = ShooterCharacter->GetBaseWalkSpeed();
 	// alpha from 0 to 0.4
 	AlphaMoveSpeed = UKismetMathLibrary::MapRangeClamped(
 	Speed, 0.f, MaxSpeed, 0.f, 0.4f);
 
 	// Aim Offsets
-	AimingYawRotation = ShootingCharacter->GetAimingYawRotation();
-	AimingPitchRotation = ShootingCharacter->GetAimingPitchRotation();
+	AimingYawRotation = ShooterCharacter->GetAimingYawRotation();
+	AimingPitchRotation = ShooterCharacter->GetAimingPitchRotation();
 
-	if(bIsWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && ShootingCharacter->GetMesh())
+	if(bIsWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && ShooterCharacter->GetMesh())
 	{
 		// Left hand
 		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
 			FName("LeftHandSocket"), RTS_World);
 		FVector OutPosition;
 		FRotator OutRotation;
-		ShootingCharacter->GetMesh()->TransformToBoneSpace(
+		ShooterCharacter->GetMesh()->TransformToBoneSpace(
 			FName("weapon_r"), LeftHandTransform.GetLocation(),
 			FRotator::ZeroRotator, OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 
 		// Right hand transform
-		FTransform RightHandTransform = ShootingCharacter->GetMesh()->GetSocketTransform(
+		FTransform RightHandTransform = ShooterCharacter->GetMesh()->GetSocketTransform(
 			FName("weapon_r"), RTS_World);
 
-		if(ShootingCharacter->IsLocallyControlled())
+		if(ShooterCharacter->IsLocallyControlled())
 		{
 			bLocallyControlled = true;
 			
 			// Right hand rotation
 			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(
-				RightHandTransform.GetLocation(), ShootingCharacter->GetHitTarget());
+				RightHandTransform.GetLocation(), ShooterCharacter->GetHitTarget());
 
 			// weapon rotation
 			FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
@@ -106,7 +109,7 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 			DrawDebugLine(
 				GetWorld(), MuzzleTipTransform.GetLocation(),
-				ShootingCharacter->GetHitTarget(), FColor::Green);
+				ShooterCharacter->GetHitTarget(), FColor::Green);
 		}
 	}
 }

@@ -18,9 +18,7 @@ public:
 	TObjectPtr<UTexture2D> CrosshairsBottom;
 	float CrosshairSpread;
 };
-/**
- * 
- */
+
 UCLASS()
 class MENUSYSTEM_API AShooterHUD : public AHUD
 {
@@ -28,6 +26,17 @@ class MENUSYSTEM_API AShooterHUD : public AHUD
 
 public:
 	virtual void DrawHUD() override;
+	
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	TSubclassOf<UUserWidget> CharacterOverlayClass;
+
+	UPROPERTY()
+	TObjectPtr<class UCharacterOverlay> CharacterOverlay;
+
+protected:
+	virtual void BeginPlay() override;
+	void AddCharacterOverlay();
+	
 private:
 	FHUDPackage HUDPackage;
 	void DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread);
