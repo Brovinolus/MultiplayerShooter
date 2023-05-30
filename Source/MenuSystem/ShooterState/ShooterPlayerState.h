@@ -33,4 +33,6 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Deaths)
 	int32 Deaths;
+
+	
 };

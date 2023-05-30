@@ -21,4 +21,10 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse,
 		const FHitResult& Hit) override;
+	
+private:
+	UPROPERTY()
+	TObjectPtr<class AShooterHUD> HUD;
+	UPROPERTY()
+	TObjectPtr<class AShooterPlayerController> Controller;
 };

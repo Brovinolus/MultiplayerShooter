@@ -44,8 +44,21 @@ private:
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreadMax = 16.f;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UTexture2D> HitImage;
+
+	UPROPERTY(EditAnywhere)
+	float HitDelay = 0.5f;
+
+	FTimerHandle HitTimer;
+	void HUDHit(UTexture2D* Texture, FVector2D ViewportCenter);
+	void StartHitTimer();
+	void FinishHitTimer();
+	bool bHit = false;
+
 	//FVector2D CrosshairOffset = FVector2D(0.f, 0.f);
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
+	FORCEINLINE void SetHUDHit(const bool bCharacterHit) { bHit = bCharacterHit; }
 	//FORCEINLINE void SetCrosshairOffset(FVector2D CrosshairOffsetLocation) { CrosshairOffset = CrosshairOffsetLocation; }
 };

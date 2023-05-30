@@ -33,8 +33,14 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 	void Fire();
+	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void FireButtonPressed(bool bPressed);
+
+	void SprintButtonPressed(bool bPressed);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetSprinting(bool bIsSprinting);
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -66,7 +72,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
 
+	UPROPERTY(EditAnywhere)
+	float SprintSpeed;
+
 	bool bFireButtonPressed;
+	bool bSprintButtonPressed;
 	
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;

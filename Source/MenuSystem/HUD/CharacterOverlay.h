@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/Border.h"
 #include "CharacterOverlay.generated.h"
 
 /**
@@ -25,4 +26,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> DeathCount;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> PingValue;
 };
