@@ -62,14 +62,6 @@ void AShooterHUD::DrawHUD()
 			FVector2D Spread(0.f, -SpreadScaled);
 			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter, Spread);
 		}
-
-		if(IsValid(HitImage))
-		{
-			if (bHit)
-			{
-				HUDHit(HitImage, ViewportCenter);
-			}
-		}
 	}
 }
 
@@ -94,44 +86,4 @@ void AShooterHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, F
 		1.f,
 		FLinearColor::White
 	);
-}
-
-void AShooterHUD::HUDHit(UTexture2D* Texture, FVector2D ViewportCenter)
-{
-	const float TextureWidth = Texture->GetSizeX();
-	const float TextureHeight = Texture->GetSizeY();
-	const FVector2D TextureDrawPoint(
-		ViewportCenter.X - (TextureWidth / 2.f),
-		ViewportCenter.Y - (TextureWidth / 2.f)
-	);
-
-	DrawTexture(
-		Texture,
-		TextureDrawPoint.X,
-		TextureDrawPoint.Y,
-		TextureWidth,
-		TextureHeight,
-		0.f,
-		0.f,
-		1.f,
-		1.f,
-		FLinearColor::Red
-	);
-
-	StartHitTimer();
-}
-
-void AShooterHUD::StartHitTimer()
-{
-	GetWorldTimerManager().SetTimer(
-		HitTimer,
-		this,
-		&AShooterHUD::FinishHitTimer,
-		HitDelay
-	);
-}
-
-void AShooterHUD::FinishHitTimer()
-{
-	bHit = false;
 }

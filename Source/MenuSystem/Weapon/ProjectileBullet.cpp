@@ -28,12 +28,6 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				if (OtherActor->CanBeDamaged())
 				{
 					UE_LOG(LogTemp, Warning, TEXT("Hit"));
-					HUD->SetHUDHit(true);
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Didn't Hit"));
-					HUD->SetHUDHit(false);
 				}
 			}
 		}
