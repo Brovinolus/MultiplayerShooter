@@ -39,13 +39,10 @@ void AWeapon::BeginPlay()
 		PickupWidget->SetVisibility(false);
 	}
 
-	if (HasAuthority())
-	{
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		AreaSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
-		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::AWeapon::OnSphereEndOverlap);
-	}
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	AreaSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
+	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::AWeapon::OnSphereEndOverlap);
 }
 
 void AWeapon::Tick(float DeltaTime)
@@ -58,6 +55,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -80,6 +78,17 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	{
 		ShootingCharacter->SetOverlappingWeapon(nullptr);
 	}
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	
+}
+
+void AWeapon::SpendRound()
+{
+	--Ammo;
+	
 }
 
 void AWeapon::SetWeaponState(EWeaponState State)

@@ -27,8 +27,9 @@ UCombatComponent::UCombatComponent()
 	
 	//this->SetComponentTickEnabled(true);
 	//bTickInEditor = true;
-	
-	BaseWalkSpeed = 600.f;
+
+	SprintSpeed = 600.f;
+	BaseWalkSpeed = 300.f;
 	AimWalkSpeed = 300.f;
 }
 
@@ -82,28 +83,74 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 	if (bFireButtonPressed)
 	{
-		FVector Velocity = Character->GetVelocity();
-		Velocity.Z = 0.f;
-		float Speed = Velocity.Size();
-		
-		if(Speed == 0.f || bAiming)
+		Fire();
+	}
+}
+
+void UCombatComponent::SprintButtonPressed(bool bPressed)
+{
+	if(!bAiming)
+	{
+		bSprintButtonPressed = bPressed;
+		ServerSetSprinting(bPressed);
+
+		if (Character && !Character->bIsCrouched)
 		{
-			Fire();
+			Character->GetCharacterMovement()->MaxWalkSpeed = bSprintButtonPressed ? SprintSpeed : BaseWalkSpeed;
 		}
+	}
+}
+
+void UCombatComponent::ServerSetSprinting_Implementation(bool bIsSprinting)
+{
+	bSprintButtonPressed = bIsSprinting;
+	
+	if (Character)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bSprintButtonPressed ? SprintSpeed : BaseWalkSpeed;
 	}
 }
 
 void UCombatComponent::Fire()
 {
-	if(bCanFire)
+	/*
+	if(Character)
 	{
-		ServerFire(HitTarget);
-		if(EquippedWeapon)
+		FVector Velocity = Character->GetVelocity();
+		Velocity.Z = 0.f;
+		float Speed = Velocity.Size();
+		
+		//if((Speed == 0.f || bAiming) && !Character->GetCharacterMovement()->IsFalling())
+		
+		if(!bSprintButtonPressed || (Character->bIsCrouched && bAiming) || !Character->GetCharacterMovement()->IsFalling())
+		{
+			bCanFire = true;
+		}
+		else
 		{
 			bCanFire = false;
-			CrosshairShootFactor = CrosshairShootFactorTarget;
 		}
-		StartFireTimer();
+	}*/
+	
+	if(!Character) return;
+	
+	if(!bSprintButtonPressed && !Character->GetCharacterMovement()->IsFalling())
+	{
+		if(bCanFire)
+		{
+			if (!Character->HasAuthority())
+			{
+				ServerFire(HitTarget);
+			}
+
+			LocalFire(HitTarget);
+			if(EquippedWeapon)
+			{
+				bCanFire = false;
+				CrosshairShootFactor = CrosshairShootFactorTarget;
+			}
+			StartFireTimer();
+		}
 	}
 }
 
@@ -136,6 +183,13 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 }
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+	
+	LocalFire(TraceHitTarget);
+}
+
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
 	if (Character)
@@ -254,12 +308,18 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 
 		if (HUD)
 		{
+			if(!Character || !EquippedWeapon) return;
+			
 			FHUDPackage HUDPackage;
 			FVector Velocity = Character->GetVelocity();
 			Velocity.Z = 0.f;
 			float Speed = Velocity.Size();
 
-			if(EquippedWeapon && Speed == 0.f || EquippedWeapon && bAiming)
+			bool bShowCrosshair;
+
+			bShowCrosshair = !bSprintButtonPressed && !Character->GetCharacterMovement()->IsFalling() ? true : false;
+
+			if(bShowCrosshair)
 			{
 				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
 				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
@@ -283,6 +343,8 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(
 				WalkSpeedRange, VelocityMultiplierRange, Speed);
 
+			// Jump
+			/*
 			if (Character->GetCharacterMovement()->IsFalling())
 			{
 				CrosshairInAirFactor = FMath::FInterpTo(
@@ -292,7 +354,7 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			{
 				CrosshairInAirFactor = FMath::FInterpTo(
 					CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
-			}
+			}*/
 
 			if (bAiming)
 			{
@@ -361,12 +423,15 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
-	bAiming = bIsAiming;
-	ServerSetAiming(bIsAiming);
-	
-	if (Character && !Character->bIsCrouched)
+	if(!bSprintButtonPressed)
 	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+		bAiming = bIsAiming;
+		ServerSetAiming(bIsAiming);
+	
+		if (Character && !Character->bIsCrouched)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+		}
 	}
 }
 

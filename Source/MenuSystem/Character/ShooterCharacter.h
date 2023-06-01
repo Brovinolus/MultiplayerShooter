@@ -45,6 +45,8 @@ protected:
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void SprintButtonPressed();
+	void SprintButtonReleased();
 	void PlayHitReactMontage();
 	void GetShooterPlayerState();
 	UFUNCTION()
@@ -110,6 +112,7 @@ private:
 	
 	float BaseWalkSpeed;
 	float AimWalkSpeed;
+	float SprintSpeed;
 
 	UPROPERTY(EditAnywhere)
 	float JumpDelay = 1.f;

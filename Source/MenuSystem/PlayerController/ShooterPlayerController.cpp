@@ -7,12 +7,22 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"	
 #include "MenuSystem/Character/ShooterCharacter.h"
+#include "MenuSystem/ShooterState/ShooterPlayerState.h"
 
 void AShooterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
+
 	ShooterHUD = Cast<AShooterHUD>(GetHUD());
+}
+
+void AShooterPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	PingValue();
 }
 
 void AShooterPlayerController::OnPossess(APawn* InPawn)
@@ -22,6 +32,23 @@ void AShooterPlayerController::OnPossess(APawn* InPawn)
 	if (ShooterCharacter)
 	{
 		ShooterCharacter->UpdateHUDHealth();
+	}
+}
+
+void AShooterPlayerController::PingValue()
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD
+		->CharacterOverlay->PingValue;
+	if(bHUDValid)
+	{
+		ShooterPlayerState = ShooterPlayerState == nullptr ? GetPlayerState<AShooterPlayerState>() : ShooterPlayerState;
+		if (ShooterPlayerState)
+		{
+			FString PingValue = FString::Printf(TEXT("%d"), FMath::FloorToInt(ShooterPlayerState->GetPingInMilliseconds()));
+			ShooterHUD->CharacterOverlay->PingValue->SetText(FText::FromString(PingValue));
+		}
 	}
 }
 

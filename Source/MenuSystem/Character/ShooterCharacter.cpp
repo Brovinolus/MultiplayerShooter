@@ -57,6 +57,7 @@ AShooterCharacter::AShooterCharacter()
 	{
 		BaseWalkSpeed = Combat->BaseWalkSpeed;
 		AimWalkSpeed = Combat->AimWalkSpeed;
+		SprintSpeed = Combat->SprintSpeed;
 	}
 }
 
@@ -100,6 +101,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AShooterCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AShooterCharacter::SprintButtonPressed);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AShooterCharacter::SprintButtonReleased);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
@@ -169,6 +172,22 @@ void AShooterCharacter::PlayDeathMontage()
 				AnimInstance->Montage_Play(RandomMontage);
 			}
 		}
+	}
+}
+
+void AShooterCharacter::SprintButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->SprintButtonPressed(true);
+	}
+}
+
+void AShooterCharacter::SprintButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->SprintButtonPressed(false);
 	}
 }
 

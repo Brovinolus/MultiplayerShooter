@@ -103,6 +103,7 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 			FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetUnitAxis(EAxis::X));
 
+			/*
 			DrawDebugLine(
 				GetWorld(), MuzzleTipTransform.GetLocation(),
 				MuzzleTipTransform.GetLocation() + MuzzleX * 1000.f, FColor::Red);
@@ -110,6 +111,7 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			DrawDebugLine(
 				GetWorld(), MuzzleTipTransform.GetLocation(),
 				ShooterCharacter->GetHitTarget(), FColor::Green);
+				*/
 		}
 	}
 }

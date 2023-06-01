@@ -5,6 +5,8 @@
 
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+#include "MenuSystem/HUD/ShooterHUD.h"
+#include "MenuSystem/PlayerController/ShooterPlayerController.h"
 
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                               FVector NormalImpulse, const FHitResult& Hit)
@@ -18,6 +20,16 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 		if (OwnerController)
 		{
 			UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this, UDamageType::StaticClass());
+
+			Controller = Controller == nullptr ? Cast<AShooterPlayerController>(OwnerCharacter->Controller) : Controller;
+			HUD = HUD == nullptr ? Cast<AShooterHUD>(Controller->GetHUD()) : HUD;
+			if(HUD)
+			{
+				if (OtherActor->CanBeDamaged())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Hit"));
+				}
+			}
 		}
 	}
 	
