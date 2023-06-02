@@ -29,4 +29,10 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> PingValue;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> WeaponAmmo;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> MaxAmmo;
 };

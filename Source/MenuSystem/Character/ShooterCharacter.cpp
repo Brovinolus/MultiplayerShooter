@@ -490,6 +490,11 @@ void AShooterCharacter::CharacterEliminated()
 
 void AShooterCharacter::MulticastCharacterEliminated_Implementation()
 {
+	if (ShooterPlayerController)
+	{
+		ShooterPlayerController->SetHUDWeaponAmmo(0);
+	}
+	
 	bCharacterEliminated = true;
 	PlayDeathMontage();
 

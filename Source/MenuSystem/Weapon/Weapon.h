@@ -32,6 +32,8 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void FireWeapon(const FVector& HitTarget);
 	void WeaponDropped();
@@ -83,7 +85,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+	
 	UFUNCTION()
 	virtual void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
@@ -140,6 +142,12 @@ private:
 	void SpendRound();
 
 	bool bCanShowParticlesInFireAnimation = true;
+
+	UPROPERTY()
+	TObjectPtr<class AShooterCharacter> ShooterOwnerCharacter;
+	
+	UPROPERTY()
+	TObjectPtr<class AShooterPlayerController> ShooterOwnerController;
 public:
 	void SetWeaponState(EWeaponState State);
 	void SetCanShowParticlesInFireAnimation(bool bCanShowParticles);
@@ -150,4 +158,5 @@ public:
 	FORCEINLINE FVector3d GetZoomedCameraLocation() const { return ZoomedCameraLocation; }
 	FORCEINLINE FVector3d GetZoomedCrouchCameraLocation() const { return ZoomedCrouchCameraLocation; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	bool IsAmmoEmpty();
 };

@@ -136,7 +136,7 @@ void UCombatComponent::Fire()
 	
 	if(!bSprintButtonPressed && !Character->GetCharacterMovement()->IsFalling())
 	{
-		if(bCanFire)
+		if(CanFire())
 		{
 			if (!Character->HasAuthority())
 			{
@@ -152,6 +152,15 @@ void UCombatComponent::Fire()
 			StartFireTimer();
 		}
 	}
+}
+
+bool UCombatComponent::CanFire()
+{
+	if (!EquippedWeapon) return false;
+	if (EquippedWeapon->IsAmmoEmpty()) return false;
+	if(!bCanFire) return false;
+	
+	return true;
 }
 
 void UCombatComponent::StartFireTimer()
@@ -222,6 +231,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 
 	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetHUDAmmo();
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }

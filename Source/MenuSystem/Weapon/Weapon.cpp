@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "..\Character\ShooterCharacter.h"
+#include "MenuSystem/PlayerController/ShooterPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
 AWeapon::AWeapon()
@@ -80,15 +81,48 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
-void AWeapon::OnRep_Ammo()
-{
-	
-}
-
 void AWeapon::SpendRound()
 {
-	--Ammo;
-	
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
+	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+
+	if (Owner == nullptr)
+	{
+		ShooterOwnerCharacter = nullptr;
+		ShooterOwnerController = nullptr;
+	}
+	else
+	{
+		SetHUDAmmo();
+	}
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr
+								? Cast<AShooterCharacter>(GetOwner())
+								: ShooterOwnerCharacter;
+	if (ShooterOwnerCharacter)
+	{
+		ShooterOwnerController = ShooterOwnerController == nullptr
+									 ? Cast<AShooterPlayerController>(ShooterOwnerCharacter->Controller)
+									 : ShooterOwnerController;
+
+		if(IsValid(ShooterOwnerController))
+		{
+			ShooterOwnerController->SetHUDWeaponAmmo(Ammo);
+		}
+	}
 }
 
 void AWeapon::SetWeaponState(EWeaponState State)
@@ -118,6 +152,11 @@ void AWeapon::SetWeaponState(EWeaponState State)
 void AWeapon::SetCanShowParticlesInFireAnimation(bool bCanShowParticles)
 {
 	bCanShowParticlesInFireAnimation = bCanShowParticles;
+}
+
+bool AWeapon::IsAmmoEmpty()
+{
+	return Ammo <= 0;
 }
 
 void AWeapon::OnRep_WeaponState()
@@ -159,6 +198,8 @@ void AWeapon::FireWeapon(const FVector& HitTarget)
 			WeaponMesh->PlayAnimation(FireAnimationWithoutParticles, false);
 		}
 	}
+
+	SpendRound();
 }
 
 void AWeapon::WeaponDropped()
@@ -167,5 +208,7 @@ void AWeapon::WeaponDropped()
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
+	ShooterOwnerCharacter = nullptr;
+	ShooterOwnerController = nullptr;
 }
 
