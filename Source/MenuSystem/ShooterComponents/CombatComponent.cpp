@@ -39,6 +39,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME_CONDITION(UCombatComponent, MaxWeaponAmmo, COND_OwnerOnly);
 }
 
 void UCombatComponent::BeginPlay()
@@ -56,6 +57,11 @@ void UCombatComponent::BeginPlay()
 			
 			DefaultCameraLocation = Character->GetFollowCamera()->GetRelativeLocation();
 			CurrentCameraLocation = DefaultCameraLocation;
+		}
+
+		if (Character->HasAuthority())
+		{
+			InitializeMaxAmmo();
 		}
 	}
 }
@@ -163,6 +169,21 @@ bool UCombatComponent::CanFire()
 	return true;
 }
 
+void UCombatComponent::InitializeMaxAmmo()
+{
+	MaxAmmoMap.Emplace(EWeaponType::EWT_Rifle, 120);
+	MaxAmmoMap.Emplace(EWeaponType::EWT_Pistol, 60);
+}
+
+void UCombatComponent::OnRep_MaxWeaponAmmo()
+{
+	Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
+	}
+}
+
 void UCombatComponent::StartFireTimer()
 {
 	if (EquippedWeapon == nullptr || Character == nullptr) return;
@@ -232,8 +253,35 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
+
+	if (MaxAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		MaxWeaponAmmo = MaxAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	
+	Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
+	}
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+}
+
+void UCombatComponent::ReloadWeapon()
+{
+	// we call server rpc is there is a point
+	if (MaxWeaponAmmo > 0)
+	{
+		ServerReload();
+	}
+}
+
+void UCombatComponent::ServerReload_Implementation()
+{
+	if (Character == nullptr) return;
+
+	Character->PlayReloadMontage();
 }
 
 void UCombatComponent::SpawnDefaultWeapon()

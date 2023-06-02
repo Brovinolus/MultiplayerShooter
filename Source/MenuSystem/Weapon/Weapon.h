@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -16,12 +17,13 @@ enum class EWeaponState:uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+/*
 UENUM(BlueprintType)
 enum class EWeaponType:uint8
 {
 	EWT_Rifle UMETA(DisplayName = "Rifle"),
 	EWT_Pistol UMETA(DisplayName = "Pistol")
-};
+};*/
 
 UCLASS()
 class MENUSYSTEM_API AWeapon : public AActor
@@ -135,6 +137,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo;
 
 	UFUNCTION()
 	void OnRep_Ammo();

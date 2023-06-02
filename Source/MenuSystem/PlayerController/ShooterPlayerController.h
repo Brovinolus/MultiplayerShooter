@@ -19,6 +19,7 @@ public:
 	void SetHUDKillsCount(float KillsCount);
 	void SetHUDDeaths(int32 Deaths);
 	void SetHUDWeaponAmmo(int32 Ammo);
+	void SetHUDWeaponMaxAmmo(int32 Ammo);
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;

@@ -103,6 +103,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AShooterCharacter::SprintButtonPressed);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AShooterCharacter::SprintButtonReleased);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AShooterCharacter::ReloadButtonPressed);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
@@ -128,6 +129,31 @@ void AShooterCharacter::PlayFireMontage(bool bAiming)
 	if (AnimInstance && FireWeaponMontage)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
+	}
+}
+
+void AShooterCharacter::PlayReloadMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_Pistol:
+			if (PistolReloadMontage)
+			{
+				AnimInstance->Montage_Play(PistolReloadMontage);
+			}	
+			break;
+		case EWeaponType::EWT_Rifle:
+			if (PistolReloadMontage)
+			{
+				AnimInstance->Montage_Play(PistolReloadMontage);
+			}
+			break;
+		}
 	}
 }
 
@@ -188,6 +214,14 @@ void AShooterCharacter::SprintButtonReleased()
 	if (Combat)
 	{
 		Combat->SprintButtonPressed(false);
+	}
+}
+
+void AShooterCharacter::ReloadButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->ReloadWeapon();
 	}
 }
 

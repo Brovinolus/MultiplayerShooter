@@ -34,5 +34,5 @@ public:
 	TObjectPtr<UTextBlock> WeaponAmmo;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> MaxAmmo;
+	TObjectPtr<UTextBlock> WeaponMaxAmmo;
 };

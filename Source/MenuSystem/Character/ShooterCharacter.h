@@ -19,6 +19,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayDeathMontage();
 	void CharacterEliminated();
 	UFUNCTION(NetMulticast, Reliable)
@@ -47,6 +48,7 @@ protected:
 	void FireButtonReleased();
 	void SprintButtonPressed();
 	void SprintButtonReleased();
+	void ReloadButtonPressed();
 	void PlayHitReactMontage();
 	void GetShooterPlayerState();
 	UFUNCTION()
@@ -85,6 +87,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TObjectPtr<UAnimMontage> FireWeaponMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TObjectPtr<UAnimMontage> RifleReloadMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TObjectPtr<UAnimMontage> PistolReloadMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TArray<TObjectPtr<UAnimMontage>> HitReactMontage;

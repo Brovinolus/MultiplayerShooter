@@ -102,3 +102,15 @@ void AShooterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		ShooterHUD->CharacterOverlay->WeaponAmmo->SetText(FText::FromString(AmmoText));
 	}
 }
+
+void AShooterPlayerController::SetHUDWeaponMaxAmmo(int32 Ammo)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->HealthBar && ShooterHUD
+		->CharacterOverlay->WeaponMaxAmmo;
+	if(bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		ShooterHUD->CharacterOverlay->WeaponMaxAmmo->SetText(FText::FromString(AmmoText));
+	}
+}
