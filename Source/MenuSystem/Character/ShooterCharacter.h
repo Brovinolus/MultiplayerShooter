@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "MenuSystem/ShooterTypes/TurningInPlace.h"
+#include "MenuSystem/ShooterTypes/CombatState.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS()
@@ -71,7 +72,7 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCombatComponent> Combat;
 	
 	UFUNCTION(Server, Reliable)
@@ -171,4 +172,5 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool IsCharacterEliminated() const { return bCharacterEliminated; }
+	ECombatState GetCombatState() const;
 };

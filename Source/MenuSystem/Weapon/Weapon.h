@@ -39,6 +39,7 @@ public:
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void FireWeapon(const FVector& HitTarget);
 	void WeaponDropped();
+	void AddAmmo(int32 AmmoToAdd);
 
 	/*
 	 * Textures for the weapon crosshairs
@@ -84,6 +85,12 @@ public:
 	bool bAutomatic = true;
 
 	bool bDestroyWeapon = false;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class USoundCue> EquipSound;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USoundCue> DropSound;
 
 protected:
 	virtual void BeginPlay() override;
@@ -164,4 +171,6 @@ public:
 	FORCEINLINE FVector3d GetZoomedCrouchCameraLocation() const { return ZoomedCrouchCameraLocation; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	bool IsAmmoEmpty();
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 };

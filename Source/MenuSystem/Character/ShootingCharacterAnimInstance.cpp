@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "MenuSystem/Weapon/Weapon.h"
+#include "MenuSystem/ShooterTypes/CombatState.h"
 
 void UShootingCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -113,5 +114,9 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				ShooterCharacter->GetHitTarget(), FColor::Green);
 				*/
 		}
+	
+		bUseFabrik = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+		bUseAimOffsets = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+		bTransformRightHand = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 	}
 }

@@ -15,6 +15,7 @@
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 #include "MenuSystem/GameModes/ShooterGameMode.h"
+#include "Sound/SoundCue.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -39,6 +40,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME_CONDITION(UCombatComponent, MaxWeaponAmmo, COND_OwnerOnly);
 }
 
@@ -165,6 +167,7 @@ bool UCombatComponent::CanFire()
 	if (!EquippedWeapon) return false;
 	if (EquippedWeapon->IsAmmoEmpty()) return false;
 	if(!bCanFire) return false;
+	if(CombatState == ECombatState::ECS_Reloading) return false;
 	
 	return true;
 }
@@ -222,7 +225,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
-	if (Character)
+	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
 		EquippedWeapon->FireWeapon(TraceHitTarget);
@@ -264,6 +267,16 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
 	}
+
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquippedWeapon->EquipSound,
+			Character->GetActorLocation()
+		);
+	}
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
@@ -271,17 +284,91 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 void UCombatComponent::ReloadWeapon()
 {
 	// we call server rpc is there is a point
-	if (MaxWeaponAmmo > 0)
+	if(EquippedWeapon == nullptr) return;
+
+	if (MaxWeaponAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon->GetAmmo() < EquippedWeapon->
+		GetMagCapacity())
 	{
 		ServerReload();
 	}
 }
 
+void UCombatComponent::UpdateAmmoValues()
+{
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	
+	int32 ReloadAmount = AmountToReload();
+
+	if (MaxAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		MaxAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		MaxWeaponAmmo = MaxAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+
+	Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
+	}
+	
+	EquippedWeapon->AddAmmo(ReloadAmount);
+}
+
 void UCombatComponent::ServerReload_Implementation()
 {
-	if (Character == nullptr) return;
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	
+	CombatState = ECombatState::ECS_Reloading;
+	HandleReload();
+}
 
+void UCombatComponent::FinishReloading()
+{
+	if (Character == nullptr) return;
+	if(Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues();
+	}
+	if (bFireButtonPressed)
+	{
+		Fire();
+	}
+}
+
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState)
+	{
+	case ECombatState::ECS_Reloading:
+		HandleReload();
+		break;
+	case ECombatState::ECS_Unoccupied:
+		if (bFireButtonPressed)
+		{
+			Fire();
+		}
+		break;
+	}
+}
+
+void UCombatComponent::HandleReload()
+{
 	Character->PlayReloadMontage();
+}
+
+int32 UCombatComponent::AmountToReload()
+{
+	if(EquippedWeapon == nullptr) return 0;
+	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
+	
+	if (MaxAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		int32 AmountMaxAmmo = MaxAmmoMap[EquippedWeapon->GetWeaponType()];
+		int32 Least = FMath::Min(RoomInMag, AmountMaxAmmo);
+		return FMath::Clamp(RoomInMag, 0, Least);
+	}
+	return 0;
 }
 
 void UCombatComponent::SpawnDefaultWeapon()
@@ -310,6 +397,15 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+
+		if (EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				EquippedWeapon->EquipSound,
+				Character->GetActorLocation()
+			);
+		}
 	}
 }
 

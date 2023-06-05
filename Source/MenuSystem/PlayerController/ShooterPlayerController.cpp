@@ -94,8 +94,7 @@ void AShooterPlayerController::SetHUDDeaths(int32 Deaths)
 void AShooterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 {
 	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
-	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->HealthBar && ShooterHUD
-		->CharacterOverlay->WeaponAmmo;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->WeaponAmmo;
 	if(bHUDValid)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
@@ -106,8 +105,7 @@ void AShooterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 void AShooterPlayerController::SetHUDWeaponMaxAmmo(int32 Ammo)
 {
 	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
-	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->HealthBar && ShooterHUD
-		->CharacterOverlay->WeaponMaxAmmo;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->WeaponMaxAmmo;
 	if(bHUDValid)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);

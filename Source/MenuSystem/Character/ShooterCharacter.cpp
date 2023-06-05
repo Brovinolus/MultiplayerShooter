@@ -150,7 +150,7 @@ void AShooterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_Rifle:
 			if (PistolReloadMontage)
 			{
-				AnimInstance->Montage_Play(PistolReloadMontage);
+				AnimInstance->Montage_Play(RifleReloadMontage);
 			}
 			break;
 		}
@@ -638,6 +638,12 @@ FVector AShooterCharacter::GetHitTarget() const
 {
 	if (Combat == nullptr) return FVector();
 	return Combat->HitTarget;
+}
+
+ECombatState AShooterCharacter::GetCombatState() const
+{
+	if (Combat == nullptr) ECombatState::ECS_MAX;
+	return Combat->CombatState;
 }
 
 

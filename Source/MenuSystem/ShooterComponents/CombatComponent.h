@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "MenuSystem/Weapon/WeaponTypes.h"
+#include "MenuSystem/ShooterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.f;
@@ -25,6 +26,10 @@ public:
 	void EquipWeapon(AWeapon* WeaponToEquip);
 	void SpawnDefaultWeapon();
 	void ReloadWeapon();
+	void UpdateAmmoValues();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -57,6 +62,10 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
+
+	void HandleReload();
+
+	int32 AmountToReload();
 
 private:
 	UPROPERTY()
@@ -146,4 +155,10 @@ private:
 	*/
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
 };

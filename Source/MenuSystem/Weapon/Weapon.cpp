@@ -3,11 +3,13 @@
 
 #include "Weapon.h"
 
+#include "../Character/ShooterCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
-#include "..\Character\ShooterCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 
 AWeapon::AWeapon()
 {
@@ -210,5 +212,21 @@ void AWeapon::WeaponDropped()
 	SetOwner(nullptr);
 	ShooterOwnerCharacter = nullptr;
 	ShooterOwnerController = nullptr;
+
+	/*
+	if (DropSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			DropSound,
+			GetActorLocation()
+		);
+	}*/
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
 }
 
