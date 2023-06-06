@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "MenuSystem/Weapon/Weapon.h"
+#include "MenuSystem/ShooterTypes/CombatState.h"
 
 void UShootingCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -64,9 +65,8 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Lean = FMath::Clamp(Interp, -90.f, 90.f);
 	
 	float MaxSpeed = ShooterCharacter->GetBaseWalkSpeed();
-	// alpha from 0 to 0.4
 	AlphaMoveSpeed = UKismetMathLibrary::MapRangeClamped(
-	Speed, 0.f, MaxSpeed, 0.f, 0.4f);
+	Speed, 0.f, MaxSpeed, 0.f, 0.3f);
 
 	// Aim Offsets
 	AimingYawRotation = ShooterCharacter->GetAimingYawRotation();
@@ -113,5 +113,9 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				ShooterCharacter->GetHitTarget(), FColor::Green);
 				*/
 		}
+	
+		bUseFabrik = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+		bUseAimOffsets = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+		bTransformRightHand = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 	}
 }

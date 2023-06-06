@@ -8,6 +8,7 @@
 #include "Components/TextBlock.h"	
 #include "MenuSystem/Character/ShooterCharacter.h"
 #include "MenuSystem/ShooterState/ShooterPlayerState.h"
+#include "MenuSystem/Weapon/WeaponTypes.h"
 
 void AShooterPlayerController::BeginPlay()
 {
@@ -23,6 +24,7 @@ void AShooterPlayerController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	PingValue();
+	UpdateHUDValues();
 }
 
 void AShooterPlayerController::OnPossess(APawn* InPawn)
@@ -48,6 +50,23 @@ void AShooterPlayerController::PingValue()
 		{
 			FString PingValue = FString::Printf(TEXT("%d"), FMath::FloorToInt(ShooterPlayerState->GetPingInMilliseconds()));
 			ShooterHUD->CharacterOverlay->PingValue->SetText(FText::FromString(PingValue));
+		}
+	}
+}
+
+void AShooterPlayerController::UpdateHUDValues()
+{
+	if (CharacterOverlay == nullptr)
+	{
+		bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay;
+		if (bHUDValid)
+		{
+			CharacterOverlay = ShooterHUD->CharacterOverlay;
+			if (CharacterOverlay)
+			{
+				if (bInitializeMaxAmmo) SetHUDWeaponMaxAmmo(HUDMaxAmmo);
+				if (bInitializeWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
+			}
 		}
 	}
 }
@@ -88,5 +107,60 @@ void AShooterPlayerController::SetHUDDeaths(int32 Deaths)
 	{
 		FString DeathsText = FString::Printf(TEXT("%d"), Deaths);
 		ShooterHUD->CharacterOverlay->DeathCount->SetText(FText::FromString(DeathsText));
+	}
+}
+
+void AShooterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->WeaponAmmo;
+	if(bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		ShooterHUD->CharacterOverlay->WeaponAmmo->SetText(FText::FromString(AmmoText));
+	}
+	else
+	{
+		bInitializeWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
+	}
+}
+
+void AShooterPlayerController::SetHUDWeaponMaxAmmo(int32 Ammo)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->WeaponMaxAmmo;
+	if(bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		ShooterHUD->CharacterOverlay->WeaponMaxAmmo->SetText(FText::FromString(AmmoText));
+	}
+	else
+	{
+		bInitializeMaxAmmo = true;
+		HUDMaxAmmo = Ammo;
+	}
+}
+
+void AShooterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->WeaponType;
+	if(bHUDValid)
+	{
+		FString WeaponTypeText = "";
+		
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *UEnum::GetValueAsString(WeaponType));
+		if (WeaponType == EWeaponType::EWT_Rifle)
+		{
+			WeaponTypeText = "Rifle";
+		}
+		
+		if (WeaponType == EWeaponType::EWT_Pistol)
+		{
+			WeaponTypeText = "Pistol";
+		}
+
+		ShooterHUD->CharacterOverlay->WeaponType->SetText(FText::FromString(WeaponTypeText));
 	}
 }

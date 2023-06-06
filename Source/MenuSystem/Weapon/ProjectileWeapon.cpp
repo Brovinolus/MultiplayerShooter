@@ -24,7 +24,7 @@ void AProjectileWeapon::FireWeapon(const FVector& HitTarget)
 		{
 			FActorSpawnParameters SpawnParameters;
 			SpawnParameters.Owner = GetOwner();
-			SpawnParameters.Instigator =InstigatiorPawn;
+			SpawnParameters.Instigator = InstigatiorPawn;
 			UWorld* World = GetWorld();
 			if (World)
 			{

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -16,12 +17,13 @@ enum class EWeaponState:uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+/*
 UENUM(BlueprintType)
 enum class EWeaponType:uint8
 {
 	EWT_Rifle UMETA(DisplayName = "Rifle"),
 	EWT_Pistol UMETA(DisplayName = "Pistol")
-};
+};*/
 
 UCLASS()
 class MENUSYSTEM_API AWeapon : public AActor
@@ -32,9 +34,12 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void FireWeapon(const FVector& HitTarget);
 	void WeaponDropped();
+	void AddAmmo(int32 AmmoToAdd);
 
 	/*
 	 * Textures for the weapon crosshairs
@@ -81,9 +86,15 @@ public:
 
 	bool bDestroyWeapon = false;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class USoundCue> EquipSound;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USoundCue> DropSound;
+
 protected:
 	virtual void BeginPlay() override;
-
+	
 	UFUNCTION()
 	virtual void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
@@ -134,12 +145,21 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo;
+
 	UFUNCTION()
 	void OnRep_Ammo();
 
 	void SpendRound();
 
 	bool bCanShowParticlesInFireAnimation = true;
+
+	UPROPERTY()
+	TObjectPtr<class AShooterCharacter> ShooterOwnerCharacter;
+	
+	UPROPERTY()
+	TObjectPtr<class AShooterPlayerController> ShooterOwnerController;
 public:
 	void SetWeaponState(EWeaponState State);
 	void SetCanShowParticlesInFireAnimation(bool bCanShowParticles);
@@ -150,4 +170,7 @@ public:
 	FORCEINLINE FVector3d GetZoomedCameraLocation() const { return ZoomedCameraLocation; }
 	FORCEINLINE FVector3d GetZoomedCrouchCameraLocation() const { return ZoomedCrouchCameraLocation; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	bool IsAmmoEmpty();
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 };

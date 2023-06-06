@@ -29,6 +29,12 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere, Category = "Widgets")
+	TSubclassOf<UUserWidget> WidgetHitClass;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> WidgetHitInstance;
 	
 private:
 	UPROPERTY(EditAnywhere)
@@ -49,5 +55,17 @@ private:
 	TObjectPtr<class USoundCue> StoneImpactSounds;
 
 	UPROPERTY()
-	TObjectPtr<class AShooterCharacter> ShooterCharacter;
+	TObjectPtr<class AShooterCharacter> ShooterCharacterReceivingHit;
+
+	float Lifetime = 2.f;
+	FTimerHandle DestroyProjectileTimer;
+
+	void DestroyProjectile();
+
+	FTimerHandle DestroyWidgetHitTimer;
+
+	void ShowHitWidget();
+
+	UFUNCTION(Client, Reliable)
+	void Client_ShowHitWidget();
 };

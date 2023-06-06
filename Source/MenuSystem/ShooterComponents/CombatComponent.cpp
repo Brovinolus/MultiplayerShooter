@@ -15,18 +15,12 @@
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 #include "MenuSystem/GameModes/ShooterGameMode.h"
+#include "Sound/SoundCue.h"
 
 UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
-	
-	// causing a problem, cannot build
-	//RegisterComponent();
-	//RegisterAllComponentTickFunctions(true);
-	
-	//this->SetComponentTickEnabled(true);
-	//bTickInEditor = true;
 
 	SprintSpeed = 600.f;
 	BaseWalkSpeed = 300.f;
@@ -39,12 +33,13 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME(UCombatComponent, CombatState);
+	DOREPLIFETIME_CONDITION(UCombatComponent, MaxWeaponAmmo, COND_OwnerOnly);
 }
 
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SpawnDefaultWeapon();
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
@@ -57,7 +52,13 @@ void UCombatComponent::BeginPlay()
 			DefaultCameraLocation = Character->GetFollowCamera()->GetRelativeLocation();
 			CurrentCameraLocation = DefaultCameraLocation;
 		}
+
+		if (Character->HasAuthority())
+		{
+			InitializeMaxAmmo();
+		}
 	}
+	SpawnDefaultWeapon();
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -92,6 +93,7 @@ void UCombatComponent::SprintButtonPressed(bool bPressed)
 	if(!bAiming)
 	{
 		bSprintButtonPressed = bPressed;
+
 		ServerSetSprinting(bPressed);
 
 		if (Character && !Character->bIsCrouched)
@@ -113,30 +115,11 @@ void UCombatComponent::ServerSetSprinting_Implementation(bool bIsSprinting)
 
 void UCombatComponent::Fire()
 {
-	/*
-	if(Character)
-	{
-		FVector Velocity = Character->GetVelocity();
-		Velocity.Z = 0.f;
-		float Speed = Velocity.Size();
-		
-		//if((Speed == 0.f || bAiming) && !Character->GetCharacterMovement()->IsFalling())
-		
-		if(!bSprintButtonPressed || (Character->bIsCrouched && bAiming) || !Character->GetCharacterMovement()->IsFalling())
-		{
-			bCanFire = true;
-		}
-		else
-		{
-			bCanFire = false;
-		}
-	}*/
-	
 	if(!Character) return;
 	
 	if(!bSprintButtonPressed && !Character->GetCharacterMovement()->IsFalling())
 	{
-		if(bCanFire)
+		if(CanFire())
 		{
 			if (!Character->HasAuthority())
 			{
@@ -151,6 +134,31 @@ void UCombatComponent::Fire()
 			}
 			StartFireTimer();
 		}
+	}
+}
+
+bool UCombatComponent::CanFire()
+{
+	if (!EquippedWeapon) return false;
+	if (EquippedWeapon->IsAmmoEmpty()) return false;
+	if(!bCanFire) return false;
+	if(CombatState == ECombatState::ECS_Reloading) return false;
+	
+	return true;
+}
+
+void UCombatComponent::InitializeMaxAmmo()
+{
+	MaxAmmoMap.Emplace(EWeaponType::EWT_Rifle, 120);
+	MaxAmmoMap.Emplace(EWeaponType::EWT_Pistol, 60);
+}
+
+void UCombatComponent::OnRep_MaxWeaponAmmo()
+{
+	Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
 	}
 }
 
@@ -192,7 +200,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
-	if (Character)
+	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
 		EquippedWeapon->FireWeapon(TraceHitTarget);
@@ -222,8 +230,121 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 
 	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetHUDAmmo();
+
+	if (MaxAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		MaxWeaponAmmo = MaxAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	
+	Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
+		Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
+	}
+
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquippedWeapon->EquipSound,
+			Character->GetActorLocation()
+		);
+	}
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+}
+
+void UCombatComponent::ReloadWeapon()
+{
+	// we call server rpc is there is a point
+	if(EquippedWeapon == nullptr) return;
+
+	if (MaxWeaponAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon->GetAmmo() < EquippedWeapon->
+		GetMagCapacity())
+	{
+		ServerReload();
+	}
+}
+
+void UCombatComponent::UpdateAmmoValues()
+{
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	
+	int32 ReloadAmount = AmountToReload();
+
+	if (MaxAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		MaxAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		MaxWeaponAmmo = MaxAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+
+	Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
+	}
+	
+	EquippedWeapon->AddAmmo(ReloadAmount);
+}
+
+void UCombatComponent::ServerReload_Implementation()
+{
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	
+	CombatState = ECombatState::ECS_Reloading;
+	HandleReload();
+}
+
+void UCombatComponent::FinishReloading()
+{
+	if (Character == nullptr) return;
+	if(Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues();
+	}
+	if (bFireButtonPressed)
+	{
+		Fire();
+	}
+}
+
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState)
+	{
+	case ECombatState::ECS_Reloading:
+		HandleReload();
+		break;
+	case ECombatState::ECS_Unoccupied:
+		if (bFireButtonPressed)
+		{
+			Fire();
+		}
+		break;
+	}
+}
+
+void UCombatComponent::HandleReload()
+{
+	Character->PlayReloadMontage();
+}
+
+int32 UCombatComponent::AmountToReload()
+{
+	if(EquippedWeapon == nullptr) return 0;
+	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
+	
+	if (MaxAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		int32 AmountMaxAmmo = MaxAmmoMap[EquippedWeapon->GetWeaponType()];
+		int32 Least = FMath::Min(RoomInMag, AmountMaxAmmo);
+		return FMath::Clamp(RoomInMag, 0, Least);
+	}
+	return 0;
 }
 
 void UCombatComponent::SpawnDefaultWeapon()
@@ -244,6 +365,11 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	if (EquippedWeapon && Character)
 	{
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
+		}
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket)
 		{
@@ -252,6 +378,15 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+
+		if (EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				EquippedWeapon->EquipSound,
+				Character->GetActorLocation()
+			);
+		}
 	}
 }
 

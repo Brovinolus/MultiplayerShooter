@@ -2,12 +2,15 @@
 
 
 #include "Projectile.h"
+
+#include "Blueprint/UserWidget.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "MenuSystem/Character/ShooterCharacter.h"
 #include "Sound/SoundCue.h"
 #include "MenuSystem/MenuSystem.h"
+#include "Net/UnrealNetwork.h"
 
 AProjectile::AProjectile()
 {
@@ -44,23 +47,65 @@ void AProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 			);
 	}
+
+	if (WidgetHitClass)
+	{
+		WidgetHitInstance = CreateWidget<UUserWidget>(GetWorld(), WidgetHitClass);
+
+		if (WidgetHitInstance)
+		{
+			WidgetHitInstance->AddToViewport();
+			WidgetHitInstance->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 	
 	if (HasAuthority())
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+		GetWorldTimerManager().SetTimer(DestroyProjectileTimer, this, &AProjectile::DestroyProjectile, Lifetime, false);
 	}
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
-	if (ShooterCharacter)
+	ShooterCharacterReceivingHit = Cast<AShooterCharacter>(OtherActor);
+	if (ShooterCharacterReceivingHit)
 	{
-		ShooterCharacter->MulticastHit(Hit.ImpactPoint);
+		ShooterCharacterReceivingHit->MulticastHit(Hit.ImpactPoint);
+
+		Client_ShowHitWidget();
 	}
 	
 	Destroy();
+}
+
+void AProjectile::DestroyProjectile()
+{
+	Destroy();
+}
+
+void AProjectile::ShowHitWidget()
+{
+	if (WidgetHitInstance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Widget displayed"));
+
+		const float DisplayDuration = 0.5f;
+			
+		WidgetHitInstance->SetVisibility(ESlateVisibility::Visible);
+		GetWorldTimerManager().SetTimer(DestroyWidgetHitTimer, [this]() {
+			if (WidgetHitInstance)
+			{
+				WidgetHitInstance->SetVisibility(ESlateVisibility::Hidden);
+			}
+		}, DisplayDuration, false);
+	}
+}
+
+void AProjectile::Client_ShowHitWidget_Implementation()
+{
+	ShowHitWidget();
 }
 
 void AProjectile::Tick(float DeltaTime)
@@ -74,12 +119,12 @@ void AProjectile::Destroyed()
 {
 	Super::Destroyed();
 	
-	if (StoneImpactParticles && ShooterCharacter == nullptr)
+	if (StoneImpactParticles && ShooterCharacterReceivingHit == nullptr)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StoneImpactParticles, GetActorTransform());
 	}
 
-	if (StoneImpactSounds && ShooterCharacter == nullptr)
+	if (StoneImpactSounds && ShooterCharacterReceivingHit == nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, StoneImpactSounds, GetActorLocation());
 	}

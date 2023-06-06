@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "MenuSystem/Weapon/WeaponTypes.h"
+#include "MenuSystem/ShooterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.f;
 
 class AWeapon;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+
 class MENUSYSTEM_API UCombatComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -22,6 +25,11 @@ public:
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
 	void SpawnDefaultWeapon();
+	void ReloadWeapon();
+	void UpdateAmmoValues();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -51,6 +59,13 @@ protected:
 	void TraceToShoot(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
+
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
+	void HandleReload();
+
+	int32 AmountToReload();
 
 private:
 	UPROPERTY()
@@ -120,9 +135,33 @@ private:
 	void StartFireTimer();
 	void FireTimerFinished();
 
+	bool CanFire();
+
+	// Max Ammo for the equipped weapon
+	UPROPERTY(ReplicatedUsing = OnRep_MaxWeaponAmmo)
+	int32 MaxWeaponAmmo;
+
+	void InitializeMaxAmmo();
+	
+	UFUNCTION()
+	void OnRep_MaxWeaponAmmo();
+
+	// cannot be replicated, uses hash algorithm
+	UPROPERTY(EditAnywhere)
+	TMap<EWeaponType, int32> MaxAmmoMap;
+
+	int32 MaxAmmoRifle = 120;
+	int32 MaxAmmoPistol = 60;
+
 	/**
 	* Default weapon
 	*/
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
 };

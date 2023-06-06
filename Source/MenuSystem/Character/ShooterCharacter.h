@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "MenuSystem/ShooterTypes/TurningInPlace.h"
+#include "MenuSystem/ShooterTypes/CombatState.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS()
@@ -19,6 +20,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayDeathMontage();
 	void CharacterEliminated();
 	UFUNCTION(NetMulticast, Reliable)
@@ -47,6 +49,7 @@ protected:
 	void FireButtonReleased();
 	void SprintButtonPressed();
 	void SprintButtonReleased();
+	void ReloadButtonPressed();
 	void PlayHitReactMontage();
 	void GetShooterPlayerState();
 	UFUNCTION()
@@ -69,7 +72,7 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCombatComponent> Combat;
 	
 	UFUNCTION(Server, Reliable)
@@ -85,6 +88,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TObjectPtr<UAnimMontage> FireWeaponMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TObjectPtr<UAnimMontage> RifleReloadMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TObjectPtr<UAnimMontage> PistolReloadMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TArray<TObjectPtr<UAnimMontage>> HitReactMontage;
@@ -154,6 +163,7 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool CanJump();
 	FORCEINLINE float GetAimingYawRotation() const { return AimingYawRotation; }
 	FORCEINLINE float GetAimingPitchRotation() const { return AimingPitchRotation; }
 	TObjectPtr<AWeapon> GetEquippedWeapon();
@@ -163,4 +173,5 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool IsCharacterEliminated() const { return bCharacterEliminated; }
+	ECombatState GetCombatState() const;
 };
