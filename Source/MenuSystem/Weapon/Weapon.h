@@ -139,18 +139,27 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TObjectPtr<UAnimationAsset> FireAnimationWithoutParticles;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 
+	// The number of unprocessed server requests for Ammo
+	// Incremented in SpendRound, decremented in ClientUpdateAmmo
+	int32 Sequence = 0;
+
 	UPROPERTY(EditAnywhere)
 	int32 MaxAmmo;
 
-	UFUNCTION()
-	void OnRep_Ammo();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
 
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+
+	int32 SetAmmo(int32 NewAmmoValue);
+	
 	void SpendRound();
 
 	bool bCanShowParticlesInFireAnimation = true;

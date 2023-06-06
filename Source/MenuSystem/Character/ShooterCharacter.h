@@ -175,3 +175,4 @@ public:
 	FORCEINLINE bool IsCharacterEliminated() const { return bCharacterEliminated; }
 	ECombatState GetCombatState() const;
 };
+//NetEmulation.PktLag 100

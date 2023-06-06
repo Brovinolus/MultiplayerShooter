@@ -58,7 +58,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -83,16 +82,52 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
+int32 AWeapon::SetAmmo(int32 NewAmmoValue)
+{
+	Ammo = FMath::Clamp(NewAmmoValue, 0, MagCapacity);
+	SetHUDAmmo();
+	return Ammo;
+}
+
+// need to apply server reconciliation
 void AWeapon::SpendRound()
 {
-	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
+	Ammo = SetAmmo(Ammo - 1);
+	if (HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else if (ShooterOwnerCharacter && ShooterOwnerCharacter->IsLocallyControlled())
+	{
+		++Sequence;
+	}
+}
+
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	if (HasAuthority()) return;
+
+	Ammo = ServerAmmo;
+	--Sequence;
+	Ammo -= Sequence;
 	SetHUDAmmo();
 }
 
-void AWeapon::OnRep_Ammo()
+void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
-	SetHUDAmmo();
+	Ammo = SetAmmo(Ammo + AmmoToAdd);
+	ClientAddAmmo(AmmoToAdd);
 }
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority()) return;
+	
+	Ammo = SetAmmo(Ammo + AmmoToAdd);
+}
+
+// since we are going to client side predicting, we are not going to replicate but use RPCs
+//void AWeapon::OnRep_Ammo()
 
 void AWeapon::OnRep_Owner()
 {
@@ -200,7 +235,7 @@ void AWeapon::FireWeapon(const FVector& HitTarget)
 			WeaponMesh->PlayAnimation(FireAnimationWithoutParticles, false);
 		}
 	}
-
+	
 	SpendRound();
 }
 
@@ -222,11 +257,5 @@ void AWeapon::WeaponDropped()
 			GetActorLocation()
 		);
 	}*/
-}
-
-void AWeapon::AddAmmo(int32 AmmoToAdd)
-{
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	SetHUDAmmo();
 }
 
