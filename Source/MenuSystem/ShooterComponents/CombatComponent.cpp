@@ -21,13 +21,6 @@ UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
-	
-	// causing a problem, cannot build
-	//RegisterComponent();
-	//RegisterAllComponentTickFunctions(true);
-	
-	//this->SetComponentTickEnabled(true);
-	//bTickInEditor = true;
 
 	SprintSpeed = 600.f;
 	BaseWalkSpeed = 300.f;
@@ -47,8 +40,6 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
@@ -67,6 +58,7 @@ void UCombatComponent::BeginPlay()
 			InitializeMaxAmmo();
 		}
 	}
+	SpawnDefaultWeapon();
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -101,6 +93,7 @@ void UCombatComponent::SprintButtonPressed(bool bPressed)
 	if(!bAiming)
 	{
 		bSprintButtonPressed = bPressed;
+
 		ServerSetSprinting(bPressed);
 
 		if (Character && !Character->bIsCrouched)
@@ -122,25 +115,6 @@ void UCombatComponent::ServerSetSprinting_Implementation(bool bIsSprinting)
 
 void UCombatComponent::Fire()
 {
-	/*
-	if(Character)
-	{
-		FVector Velocity = Character->GetVelocity();
-		Velocity.Z = 0.f;
-		float Speed = Velocity.Size();
-		
-		//if((Speed == 0.f || bAiming) && !Character->GetCharacterMovement()->IsFalling())
-		
-		if(!bSprintButtonPressed || (Character->bIsCrouched && bAiming) || !Character->GetCharacterMovement()->IsFalling())
-		{
-			bCanFire = true;
-		}
-		else
-		{
-			bCanFire = false;
-		}
-	}*/
-	
 	if(!Character) return;
 	
 	if(!bSprintButtonPressed && !Character->GetCharacterMovement()->IsFalling())
@@ -316,19 +290,6 @@ void UCombatComponent::UpdateAmmoValues()
 	EquippedWeapon->AddAmmo(ReloadAmount);
 }
 
-void UCombatComponent::UpdateHUDAmmo()
-{
-	if (Character == nullptr || EquippedWeapon == nullptr) return;
-
-	Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
-
-	if (Controller)
-	{
-		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
-		Controller->SetHUDWeaponAmmo(EquippedWeapon->GetAmmo());
-	}
-}
-
 void UCombatComponent::ServerReload_Implementation()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
@@ -407,7 +368,6 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		Controller = Controller == nullptr ? Cast<AShooterPlayerController>(Character->Controller) : Controller;
 		if (Controller)
 		{
-			Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
 			Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
 		}
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));

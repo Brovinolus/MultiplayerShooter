@@ -67,8 +67,6 @@ protected:
 
 	int32 AmountToReload();
 
-	void UpdateHUDAmmo();
-
 private:
 	UPROPERTY()
 	TObjectPtr<AShooterCharacter> Character;
@@ -151,6 +149,9 @@ private:
 	// cannot be replicated, uses hash algorithm
 	UPROPERTY(EditAnywhere)
 	TMap<EWeaponType, int32> MaxAmmoMap;
+
+	int32 MaxAmmoRifle = 120;
+	int32 MaxAmmoPistol = 60;
 
 	/**
 	* Default weapon

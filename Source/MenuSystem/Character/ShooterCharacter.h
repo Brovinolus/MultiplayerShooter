@@ -163,6 +163,7 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool CanJump();
 	FORCEINLINE float GetAimingYawRotation() const { return AimingYawRotation; }
 	FORCEINLINE float GetAimingPitchRotation() const { return AimingPitchRotation; }
 	TObjectPtr<AWeapon> GetEquippedWeapon();

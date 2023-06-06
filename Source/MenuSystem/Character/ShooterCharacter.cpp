@@ -615,6 +615,11 @@ bool AShooterCharacter::IsAiming()
 	return (Combat && Combat->bAiming);
 }
 
+bool AShooterCharacter::CanJump()
+{
+	return bCanJump;
+}
+
 void AShooterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
