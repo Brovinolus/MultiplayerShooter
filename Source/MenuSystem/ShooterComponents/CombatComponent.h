@@ -67,6 +67,8 @@ protected:
 
 	int32 AmountToReload();
 
+	void UpdateHUDAmmo();
+
 private:
 	UPROPERTY()
 	TObjectPtr<AShooterCharacter> Character;

@@ -65,9 +65,8 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Lean = FMath::Clamp(Interp, -90.f, 90.f);
 	
 	float MaxSpeed = ShooterCharacter->GetBaseWalkSpeed();
-	// alpha from 0 to 0.4
 	AlphaMoveSpeed = UKismetMathLibrary::MapRangeClamped(
-	Speed, 0.f, MaxSpeed, 0.f, 0.4f);
+	Speed, 0.f, MaxSpeed, 0.f, 0.3f);
 
 	// Aim Offsets
 	AimingYawRotation = ShooterCharacter->GetAimingYawRotation();
