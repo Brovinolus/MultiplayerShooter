@@ -174,5 +174,6 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool IsCharacterEliminated() const { return bCharacterEliminated; }
 	ECombatState GetCombatState() const;
+	bool IsLocallyReloading();
 };
 //NetEmulation.PktLag 100

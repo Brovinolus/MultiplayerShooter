@@ -651,5 +651,11 @@ ECombatState AShooterCharacter::GetCombatState() const
 	return Combat->CombatState;
 }
 
+bool AShooterCharacter::IsLocallyReloading()
+{
+	if (Combat == nullptr) return false;
+	return Combat->bLocallyReloading;
+}
+
 
 
