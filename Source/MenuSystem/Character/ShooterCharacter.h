@@ -8,6 +8,18 @@
 #include "MenuSystem/ShooterTypes/CombatState.h"
 #include "ShooterCharacter.generated.h"
 
+USTRUCT(BlueprintType)
+struct FPhysicAssetElement
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FTransform BoneTransform;
+
+	UPROPERTY()
+	FKSphylElem CapsuleInfo;
+};
+
 UCLASS()
 class AShooterCharacter : public ACharacter
 {
@@ -30,6 +42,9 @@ public:
 	void MulticastHit(const FVector_NetQuantize& ImpactPoint);
 
 	void UpdateHUDHealth();
+	
+	UPROPERTY()
+	TMap<FName, const FPhysicAssetElement> HitCollisionData;
 
 protected:
 	// Called when the game starts or when spawned
@@ -55,7 +70,6 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
 	                   class AController* InstigatorController, AActor* DamageCauser);
-	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	TObjectPtr<class USpringArmComponent> CameraBoom;
@@ -74,6 +88,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCombatComponent> Combat;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class ULagCompensationComponent> LagCompensation;
 	
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -158,6 +175,11 @@ private:
 	float CharacterEliminatedDelay = 1.f;
 
 	void CharacterEliminatedTimerFinished();
+
+	/**
+	 * PhysicsAsset for server-side rewind
+	 */
+	void StorePhysicsAsset();
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

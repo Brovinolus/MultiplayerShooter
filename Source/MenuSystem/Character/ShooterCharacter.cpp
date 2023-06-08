@@ -14,6 +14,7 @@
 #include "MenuSystem/MenuSystem.h"
 #include "MenuSystem/GameModes/ShooterGameMode.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
+#include "MenuSystem/ShooterComponents/LagCompensationComponent.h"
 #include "MenuSystem/ShooterState/ShooterPlayerState.h"
 
 AShooterCharacter::AShooterCharacter()
@@ -50,6 +51,7 @@ AShooterCharacter::AShooterCharacter()
 	MaxAimingPitchAngle = 75.f;
 	AngleToTurn = 75.f;
 	
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
@@ -72,6 +74,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	//DrawDebugPhysicsAsset();
 
 	UpdateHUDHealth();
 
@@ -114,9 +117,21 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	
+	StorePhysicsAsset();
+	
 	if (Combat)
 	{
 		Combat->Character = this;
+	}
+
+	if (LagCompensation)
+	{
+		LagCompensation->Character = this;
+		if (Controller)
+		{
+			LagCompensation->Controller = Cast<AShooterPlayerController>(Controller);
+		}
 	}
 }
 
@@ -551,6 +566,27 @@ void AShooterCharacter::CharacterEliminatedTimerFinished()
 	{
 		// we check controller in the GameMode
 		ShooterGameMode->RequestRespawn(this, Controller);
+	}
+}
+
+void AShooterCharacter::StorePhysicsAsset()
+{
+	UPhysicsAsset* PhysicsAsset = GetMesh()->GetPhysicsAsset();
+
+	if (PhysicsAsset)
+	{
+		for (const auto& SkeletalBody : PhysicsAsset->SkeletalBodySetups)
+		{
+			FPhysicAssetElement PhysicAssetElement;
+			const FName& BName = SkeletalBody->BoneName;
+			const FTransform& BoneWorldTransform = GetMesh()->GetBoneTransform(GetMesh()->GetBoneIndex(BName));
+			PhysicAssetElement.BoneTransform = BoneWorldTransform;
+			for (const auto& Capsule : SkeletalBody->AggGeom.SphylElems)
+			{
+				PhysicAssetElement.CapsuleInfo = Capsule;
+				HitCollisionData.Add(BName, PhysicAssetElement);
+			}
+		}
 	}
 }
 
