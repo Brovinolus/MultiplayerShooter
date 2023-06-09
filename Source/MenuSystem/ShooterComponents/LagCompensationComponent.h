@@ -57,15 +57,15 @@ public:
 	ULagCompensationComponent();
 	friend class AShooterCharacter;
 	void ShowFramePackage(const FFramePackage& Package);
-	void ShowFramePackageCapsule(FFramePackage& Package);
+	//void ShowFramePackageCapsule(FFramePackage& Package);
 	
 protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package);
-	void SaveFramePackageCapsule(FFramePackage& Package);
+	//void SaveFramePackageCapsule(FFramePackage& Package);
 
-	void TickCapsule();
-	void TickPhysicAsset();
+	//void TickCapsule();
+	//void TickPhysicAsset();
 private:
 	UPROPERTY()
 	TObjectPtr<AShooterCharacter> Character;
