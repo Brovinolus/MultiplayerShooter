@@ -46,6 +46,15 @@ public:
 	UPROPERTY()
 	TMap<FName, const FPhysicAssetElement> HitCollisionData;
 
+	UPROPERTY()
+	TMap<FName, class UBoxComponent*> BoxCollision;
+	
+	//UPROPERTY()
+	//TMap<FName, UCapsuleComponent*> CapsuleCollision;
+
+	//UPROPERTY()
+	//TMap<FName, UCapsuleComponent*> CapsuleCollisionCopy;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -70,6 +79,122 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float Damage, const UDamageType* DamageType,
 	                   class AController* InstigatorController, AActor* DamageCauser);
+
+	// Hit capsules for server-side rewind
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* head;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* pelvis;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_04;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_r;
+
+	/*
+	*UPROPERTY(EditAnywhere)
+	UCapsuleComponent* head;
+	
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent*neck_01;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* neck_02;
+	
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* pelvis;
+	
+	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* spine_03;
+
+	UCapsuleComponent* spine_02;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* spine_04;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* spine_05;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* upperarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* upperarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* clavicle_l;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* clavicle_r;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* lowerarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* lowerarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* hand_l;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* hand_r;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* thigh_l;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* thigh_r;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* calf_l;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* calf_r;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* foot_l;
+
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* foot_r;
+	*/
+	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	TObjectPtr<class USpringArmComponent> CameraBoom;
@@ -179,7 +304,9 @@ private:
 	/**
 	 * PhysicsAsset for server-side rewind
 	 */
+	//void CreateCapsules();
 	void StorePhysicsAsset();
+	void SetHitCapsuleSize();
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

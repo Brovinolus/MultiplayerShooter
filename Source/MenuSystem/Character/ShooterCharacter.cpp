@@ -3,6 +3,7 @@
 
 #include "ShooterCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -61,6 +62,189 @@ AShooterCharacter::AShooterCharacter()
 		AimWalkSpeed = Combat->AimWalkSpeed;
 		SprintSpeed = Combat->SprintSpeed;
 	}
+
+	// Hit capsules for server-side rewind
+	
+	head = CreateDefaultSubobject<UBoxComponent>(TEXT("head"));
+	head->SetupAttachment(GetMesh(), FName("head"));
+	head->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("head"), head);
+
+	pelvis = CreateDefaultSubobject<UBoxComponent>(TEXT("pelvis"));
+	pelvis->SetupAttachment(GetMesh(), FName("pelvis"));
+	pelvis->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("pelvis"), pelvis);
+
+	spine_04 = CreateDefaultSubobject<UBoxComponent>(TEXT("spine_04"));
+	spine_04->SetupAttachment(GetMesh(), FName("spine_04"));
+	spine_04->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("spine_04"), spine_04);
+
+	upperarm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("upperarm_l"));
+	upperarm_l->SetupAttachment(GetMesh(), FName("upperarm_l"));
+	upperarm_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("upperarm_l"), upperarm_l);
+
+	upperarm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("upperarm_r"));
+	upperarm_r->SetupAttachment(GetMesh(), FName("upperarm_r"));
+	upperarm_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("upperarm_r"), upperarm_r);
+
+	lowerarm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("lowerarm_l"));
+	lowerarm_l->SetupAttachment(GetMesh(), FName("lowerarm_l"));
+	lowerarm_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("lowerarm_l"), lowerarm_l);
+
+	lowerarm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("lowerarm_r"));
+	lowerarm_r->SetupAttachment(GetMesh(), FName("lowerarm_r"));
+	lowerarm_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("lowerarm_r"), lowerarm_r);
+
+	hand_l = CreateDefaultSubobject<UBoxComponent>(TEXT("hand_l"));
+	hand_l->SetupAttachment(GetMesh(), FName("hand_l"));
+	hand_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("hand_l"), hand_l);
+
+	hand_r = CreateDefaultSubobject<UBoxComponent>(TEXT("hand_r"));
+	hand_r->SetupAttachment(GetMesh(), FName("hand_r"));
+	hand_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("hand_r"), lowerarm_r);
+
+	thigh_l = CreateDefaultSubobject<UBoxComponent>(TEXT("thigh_l"));
+	thigh_l->SetupAttachment(GetMesh(), FName("thigh_l"));
+	thigh_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("thigh_l"), thigh_l);
+
+	thigh_r = CreateDefaultSubobject<UBoxComponent>(TEXT("thigh_r"));
+	thigh_r->SetupAttachment(GetMesh(), FName("thigh_r"));
+	thigh_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("thigh_r"), thigh_r);
+
+	calf_l = CreateDefaultSubobject<UBoxComponent>(TEXT("calf_l"));
+	calf_l->SetupAttachment(GetMesh(), FName("calf_l"));
+	calf_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("calf_l"), calf_l);
+
+	calf_r = CreateDefaultSubobject<UBoxComponent>(TEXT("calf_r"));
+	calf_r->SetupAttachment(GetMesh(), FName("calf_r"));
+	calf_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("calf_r"), calf_r);
+
+	foot_l = CreateDefaultSubobject<UBoxComponent>(TEXT("foot_l"));
+	foot_l->SetupAttachment(GetMesh(), FName("foot_l"));
+	foot_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("foot_l"), foot_l);
+
+	foot_r = CreateDefaultSubobject<UBoxComponent>(TEXT("foot_r"));
+	foot_r->SetupAttachment(GetMesh(), FName("foot_r"));
+	foot_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision.Add(FName("foot_r"), foot_r);
+
+	/*
+	neck_01 = CreateDefaultSubobject<UCapsuleComponent>(TEXT("neck_01"));
+	neck_01->SetupAttachment(GetMesh(), FName("neck_01"));
+	neck_01->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("neck_01"), neck_01);
+	
+	neck_02 = CreateDefaultSubobject<UCapsuleComponent>(TEXT("neck_02"));
+	neck_02->SetupAttachment(GetMesh(), FName("neck_02"));
+	neck_02->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("neck_02"), neck_02);
+
+	pelvis = CreateDefaultSubobject<UCapsuleComponent>(TEXT("pelvis"));
+	pelvis->SetupAttachment(GetMesh(), FName("pelvis"));
+	pelvis->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("pelvis"), pelvis);
+
+	spine_02 = CreateDefaultSubobject<UCapsuleComponent>(TEXT("spine_02"));
+	spine_02->SetupAttachment(GetMesh(), FName("spine_02"));
+	spine_02->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("spine_02"), spine_02);
+
+	spine_03 = CreateDefaultSubobject<UCapsuleComponent>(TEXT("spine_03"));
+	spine_03->SetupAttachment(GetMesh(), FName("spine_03"));
+	spine_03->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("spine_03"), spine_03);
+
+	spine_04 = CreateDefaultSubobject<UCapsuleComponent>(TEXT("spine_04"));
+	spine_04->SetupAttachment(GetMesh(), FName("spine_04"));
+	spine_04->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("spine_04"), spine_04);
+
+	spine_05 = CreateDefaultSubobject<UCapsuleComponent>(TEXT("spine_05"));
+	spine_05->SetupAttachment(GetMesh(), FName("spine_05"));
+	spine_05->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("spine_05"), spine_05);
+
+	upperarm_l = CreateDefaultSubobject<UCapsuleComponent>(TEXT("upperarm_l"));
+	upperarm_l->SetupAttachment(GetMesh(), FName("upperarm_l"));
+	upperarm_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("upperarm_l"), upperarm_l);
+
+	upperarm_r = CreateDefaultSubobject<UCapsuleComponent>(TEXT("upperarm_r"));
+	upperarm_r->SetupAttachment(GetMesh(), FName("upperarm_r"));
+	upperarm_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("upperarm_r"), upperarm_r);
+
+	clavicle_l = CreateDefaultSubobject<UCapsuleComponent>(TEXT("clavicle_l"));
+	clavicle_l->SetupAttachment(GetMesh(), FName("clavicle_l"));
+	clavicle_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("clavicle_l"), clavicle_l);
+
+	clavicle_r = CreateDefaultSubobject<UCapsuleComponent>(TEXT("clavicle_r"));
+	clavicle_r->SetupAttachment(GetMesh(), FName("clavicle_r"));
+	clavicle_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("clavicle_r"), clavicle_r);
+
+	lowerarm_l = CreateDefaultSubobject<UCapsuleComponent>(TEXT("lowerarm_l"));
+	lowerarm_l->SetupAttachment(GetMesh(), FName("lowerarm_l"));
+	lowerarm_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("lowerarm_l"), lowerarm_l);
+
+	lowerarm_r = CreateDefaultSubobject<UCapsuleComponent>(TEXT("lowerarm_r"));
+	lowerarm_r->SetupAttachment(GetMesh(), FName("lowerarm_r"));
+	lowerarm_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("lowerarm_r"), lowerarm_r);
+
+	hand_l = CreateDefaultSubobject<UCapsuleComponent>(TEXT("hand_l"));
+	hand_l->SetupAttachment(GetMesh(), FName("hand_l"));
+	hand_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("hand_l"), hand_l);
+
+	hand_r = CreateDefaultSubobject<UCapsuleComponent>(TEXT("hand_r"));
+	hand_r->SetupAttachment(GetMesh(), FName("hand_r"));
+	hand_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("hand_r"), lowerarm_r);
+
+	thigh_l = CreateDefaultSubobject<UCapsuleComponent>(TEXT("thigh_l"));
+	thigh_l->SetupAttachment(GetMesh(), FName("thigh_l"));
+	thigh_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("thigh_l"), thigh_l);
+
+	thigh_r = CreateDefaultSubobject<UCapsuleComponent>(TEXT("thigh_r"));
+	thigh_r->SetupAttachment(GetMesh(), FName("thigh_r"));
+	thigh_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("thigh_r"), thigh_r);
+
+	calf_l = CreateDefaultSubobject<UCapsuleComponent>(TEXT("calf_l"));
+	calf_l->SetupAttachment(GetMesh(), FName("calf_l"));
+	calf_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("calf_l"), calf_l);
+
+	calf_r = CreateDefaultSubobject<UCapsuleComponent>(TEXT("calf_r"));
+	calf_r->SetupAttachment(GetMesh(), FName("calf_r"));
+	calf_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("calf_r"), calf_r);
+
+	foot_l = CreateDefaultSubobject<UCapsuleComponent>(TEXT("foot_l"));
+	foot_l->SetupAttachment(GetMesh(), FName("foot_l"));
+	foot_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("foot_l"), foot_l);
+
+	foot_r = CreateDefaultSubobject<UCapsuleComponent>(TEXT("foot_r"));
+	foot_r->SetupAttachment(GetMesh(), FName("foot_r"));
+	foot_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleCollision.Add(FName("foot_r"), foot_r);*/
 }
 
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -74,6 +258,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	//DrawDebugPhysicsAsset();
 
 	UpdateHUDHealth();
@@ -84,10 +269,12 @@ void AShooterCharacter::BeginPlay()
 	}
 }
 
+
 void AShooterCharacter::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//StorePhysicsAsset();
 	GetShooterPlayerState();
 	AimOffset(DeltaTime);
 	HideCharacterIfCameraClose();
@@ -118,8 +305,6 @@ void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	
-	StorePhysicsAsset();
-	
 	if (Combat)
 	{
 		Combat->Character = this;
@@ -127,6 +312,9 @@ void AShooterCharacter::PostInitializeComponents()
 
 	if (LagCompensation)
 	{
+		//StorePhysicsAsset();
+		//SetHitCapsuleSize();
+		
 		LagCompensation->Character = this;
 		if (Controller)
 		{
@@ -589,6 +777,64 @@ void AShooterCharacter::StorePhysicsAsset()
 		}
 	}
 }
+
+/*
+void AShooterCharacter::SetHitCapsuleSize()
+{
+	for (const auto& PACapsule : HitCollisionData)
+	{
+		for (auto& CollisionPair : CapsuleCollision)
+		{
+			if (CollisionPair.Key == PACapsule.Key)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("PACapsule.Key: %s"), CapsuleCollision.Contains(PACapsule.Key) ? TEXT("true") : TEXT("false"));
+				UE_LOG(LogTemp, Warning, TEXT("CollisionPair.Key: %s"), *CollisionPair.Key.ToString());
+				
+				//UCapsuleComponent* HitCapsuleComponent = CollisionPair.Value;
+
+				if(CollisionPair.Value)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("PACapsule.Key: %s"), *PACapsule.Key.ToString());
+					UE_LOG(LogTemp, Warning, TEXT("PACapsule.Radius: %f"), PACapsule.Value.CapsuleInfo.Radius);
+					UE_LOG(LogTemp, Warning, TEXT("CollisionPair: %s"), *CollisionPair.Value->GetName());
+					UE_LOG(LogTemp, Warning, TEXT("CollisionPair Radius: %f"), CollisionPair.Value->GetScaledCapsuleRadius());
+					UCapsuleComponent* HitCapsuleComponent = nullptr;
+					FName CaspuleName = CollisionPair.Key;
+					HitCapsuleComponent = NewObject<UCapsuleComponent>(this, CaspuleName);
+					HitCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+					HitCapsuleComponent->SetCapsuleRadius(PACapsule.Value.CapsuleInfo.Radius);
+					HitCapsuleComponent->SetCapsuleHalfHeight(PACapsule.Value.CapsuleInfo.Length / 2);
+					HitCapsuleComponent->SetWorldRotation(PACapsule.Value.CapsuleInfo.Rotation);
+					HitCapsuleComponent->RegisterComponent();
+					HitCapsuleComponent->SetupAttachment(GetMesh(), FName(CaspuleName));
+
+					CapsuleCollisionCopy.Add(CollisionPair.Key, HitCapsuleComponent);
+					
+					//CollisionPair.Value->SetCapsuleRadius(PACapsule.Value.CapsuleInfo.Radius);
+					//CollisionPair.Value->SetCapsuleHalfHeight(PACapsule.Value.CapsuleInfo.Length / 2);
+					//CollisionPair.Value->SetWorldRotation(PACapsule.Value.CapsuleInfo.Rotation);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("CollisionPair.Value: nullptr"));
+				}
+			}
+		}
+		
+		for (auto Capsule : CapsuleCollision)
+		{
+			if(Capsule.Key == PACapsule.Key)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Capsule.Key: %s"), *Capsule.Key.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("PACapsule.Key: %s"), *PACapsule.Key.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Radius %f"), PACapsule.Value.CapsuleInfo.Radius);
+				Capsule.Value->SetCapsuleRadius(PACapsule.Value.CapsuleInfo.Radius);
+				Capsule.Value->SetCapsuleHalfHeight(PACapsule.Value.CapsuleInfo.Length / 2);
+				Capsule.Value->SetWorldRotation(PACapsule.Value.CapsuleInfo.Rotation);
+			}
+		}
+	}
+}*/
 
 void AShooterCharacter::OnRep_Health()
 {

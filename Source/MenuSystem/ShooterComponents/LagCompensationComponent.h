@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <deque>
+
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
@@ -11,6 +13,15 @@ struct FPhysicAssetInformation
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	FVector Location;
+
+	UPROPERTY()
+	FRotator Rotation;
+
+	UPROPERTY()
+	FVector BoxExtent;
+	/*
 	UPROPERTY()
 	FTransform BoneTransform;
 
@@ -22,6 +33,7 @@ struct FPhysicAssetInformation
 
 	UPROPERTY()
 	float CapsuleRadius;
+	*/
 };
 
 USTRUCT(BlueprintType)
@@ -45,10 +57,15 @@ public:
 	ULagCompensationComponent();
 	friend class AShooterCharacter;
 	void ShowFramePackage(const FFramePackage& Package);
+	void ShowFramePackageCapsule(FFramePackage& Package);
 	
 protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package);
+	void SaveFramePackageCapsule(FFramePackage& Package);
+
+	void TickCapsule();
+	void TickPhysicAsset();
 private:
 	UPROPERTY()
 	TObjectPtr<AShooterCharacter> Character;
@@ -56,6 +73,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<APlayerController> Controller;
 
+	std::deque<FFramePackage> FrameHistory;
+
+	UPROPERTY(EditAnywhere)
+	float MaxRecordTime = 4.f;
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
