@@ -38,4 +38,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> WeaponType;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> MatchTime;
 };
