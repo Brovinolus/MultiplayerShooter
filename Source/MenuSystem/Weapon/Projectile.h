@@ -16,6 +16,15 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 
+	// Server-side rewind
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize TraceStart;
+	// 2 decimal place of precision
+	FVector_NetQuantize100 InitialVelocity;
+
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000;
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -39,9 +48,6 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UBoxComponent> CollisionBox;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<class UProjectileMovementComponent> ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UParticleSystem> Tracer;
