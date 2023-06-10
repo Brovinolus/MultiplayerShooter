@@ -17,6 +17,10 @@ class MENUSYSTEM_API AProjectileBullet : public AProjectile
 public:
 	AProjectileBullet();
 	
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+	
 protected:
 	virtual void OnHit(
 		UPrimitiveComponent* HitComp,

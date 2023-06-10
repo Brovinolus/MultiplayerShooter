@@ -18,6 +18,11 @@ public:
 	virtual void FireWeapon(const FVector& HitTarget) override;
 	
 private:
+	// replicates
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> ProjectileClass;
+
+	// doesn't replicate
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AProjectile> ServerSideRewindProjectileClass;
 };
