@@ -58,6 +58,7 @@ public:
 	friend class AShooterCharacter;
 	void ShowFramePackage(const FFramePackage& Package);
 	//void ShowFramePackageCapsule(FFramePackage& Package);
+	void ServerSideRewind(AShooterCharacter* HitCharacter, const FVector_NetQuantize&);
 	
 protected:
 	virtual void BeginPlay() override;

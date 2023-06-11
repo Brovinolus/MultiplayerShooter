@@ -25,6 +25,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000;
 	
+	float Damage = 20.f;
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -35,9 +37,6 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse,
 		const FHitResult& Hit);
-
-	UPROPERTY(EditAnywhere)
-	float Damage = 20.f;
 
 	UPROPERTY(EditAnywhere, Category = "Widgets")
 	TSubclassOf<UUserWidget> WidgetHitClass;
