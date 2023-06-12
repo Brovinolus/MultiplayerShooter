@@ -6,10 +6,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "MenuSystem/Character/ShooterCharacter.h"
 #include "LagCompensationComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct FPhysicAssetInformation
+struct FBoxInformation
 {
 	GENERATED_BODY()
 
@@ -45,7 +46,19 @@ struct FFramePackage
 	float Time;
 
 	UPROPERTY()
-	TMap<FName, FPhysicAssetInformation> HitPhysicsAssetInfo;
+	TMap<FName, FBoxInformation> HitBoxInfo;
+};
+
+USTRUCT()
+struct FServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bHitConfirmed;
+
+	UPROPERTY()
+	bool bHeadShot;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -59,12 +72,30 @@ public:
 	void ShowFramePackage(const FFramePackage& Package);
 	//void ShowFramePackageCapsule(FFramePackage& Package);
 	void ServerSideRewind(AShooterCharacter* HitCharacter, const FVector_NetQuantize&);
+
+	FServerSideRewindResult ProjectileServerSideRewindResult(
+		AShooterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime
+	);
 	
 protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package);
-	//void SaveFramePackageCapsule(FFramePackage& Package);
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HiTime);
 
+	FServerSideRewindResult ProjectileConfirmHit(
+		const FFramePackage& Package,
+		AShooterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime
+	);
+
+	void CacheBoxPosition(AShooterCharacter* HitCharacter, FFramePackage& OutFramePackage);
+	void MoveBoxes(AShooterCharacter* HitCharacter, const FFramePackage& Package);
+	//void SaveFramePackageCapsule(FFramePackage& Package);
 	//void TickCapsule();
 	//void TickPhysicAsset();
 private:
