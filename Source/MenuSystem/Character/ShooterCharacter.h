@@ -324,5 +324,6 @@ public:
 	FORCEINLINE bool IsCharacterEliminated() const { return bCharacterEliminated; }
 	ECombatState GetCombatState() const;
 	bool IsLocallyReloading();
+	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 };
 //NetEmulation.PktLag 100

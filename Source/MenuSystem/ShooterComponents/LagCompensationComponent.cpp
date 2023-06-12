@@ -16,12 +16,75 @@ ULagCompensationComponent::ULagCompensationComponent()
 	
 }
 
+// algorithm to check frames and interpolate if it is necessary
+FFramePackage ULagCompensationComponent::GetFrameToCheck(AShooterCharacter* HitCharacter, float HitTime)
+{
+	bool bReturn =
+		HitCharacter == nullptr ||
+		HitCharacter->GetLagCompensation() == nullptr ||
+		HitCharacter->GetLagCompensation()->FrameHistory.empty();
+
+	if (bReturn)
+	{
+		return FFramePackage();
+	}
+
+	// Frame package to verify a hit
+	FFramePackage FrameToCheck;
+	bool bShouldInterpolate = true;
+	// Frame history of the hit target
+	const std::deque<FFramePackage>& History = HitCharacter->GetLagCompensation()->FrameHistory;
+	const float OldestHistoryTime = History.back().Time;
+	const float NewestHistoryTime = History.front().Time;
+
+	if (OldestHistoryTime > HitTime)
+	{
+		// too far back - too laggy
+		return FFramePackage();
+	}
+	
+	if(OldestHistoryTime == HitTime)
+	{
+		FrameToCheck = History.back();
+		bShouldInterpolate = false;
+	}
+	
+	if (NewestHistoryTime <= HitTime)
+	{
+		FrameToCheck = History.front();
+		bShouldInterpolate = false;
+	}
+	// Get an iterator to the beginning of the deque
+	auto OlderFrame = History.begin();
+
+	// Iterate through the deque to find the appropriate frame
+	for (auto It = History.begin(); It != History.end(); ++It)
+	{
+		const auto CurrentFrame = *It;
+		if (CurrentFrame.Time == HitTime)
+		{
+			FrameToCheck = *It;
+			bShouldInterpolate = false;
+		}
+		else if (CurrentFrame.Time < HitTime)
+		{
+			OlderFrame = It;
+		}
+	}
+	auto YoungerFrame = std::prev(OlderFrame);
+
+	if (bShouldInterpolate)
+	{
+		FrameToCheck = InterpBetweenFrames(*OlderFrame, *YoungerFrame, HitTime);
+	}
+	return FrameToCheck;
+}
 
 FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewindResult(AShooterCharacter* HitCharacter,
 	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
 {
 	FFramePackage FrameToCheck = GetFrameToCheck(HitCharacter, HitTime);
-	return ProjectileConfirmHit(FrameToCheck, TraceStart, InitialVelocity, HitTime);
+	return ProjectileConfirmHit(FrameToCheck, HitCharacter, TraceStart, InitialVelocity, HitTime);
 }
 
 FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FFramePackage& Package, AShooterCharacter* HitCharacter,
@@ -35,7 +98,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 
 	// head
 	UBoxComponent* HeadBox = HitCharacter->BoxCollision[FName("head")];
-	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
 
 	FPredictProjectilePathParams PathParams;
@@ -67,7 +130,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 		}
 
 		ResetHitBoxes(HitCharacter, CurrentFrame);
-		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryOnly);
 		return FServerSideRewindResult{true, true };
 	}
 	else
@@ -76,7 +139,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 		{
 			if (HitBoxPair.Value != nullptr)
 			{
-				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 				HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
 			}
 		}
@@ -96,13 +159,13 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 			}
 
 			ResetHitBoxes(HitCharacter, CurrentFrame);
-			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryOnly);
 			return FServerSideRewindResult{true, false };
 		}
 	}
 	
 	ResetHitBoxes(HitCharacter, CurrentFrame);
-	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryOnly);
 	return FServerSideRewindResult{false, false };
 }
 
@@ -138,8 +201,32 @@ void ULagCompensationComponent::MoveBoxes(AShooterCharacter* HitCharacter, const
 	}
 }
 
+void ULagCompensationComponent::ResetHitBoxes(AShooterCharacter* HitCharacter, const FFramePackage& Package)
+{
+	if(HitCharacter == nullptr) return;
+
+	for (auto& HitBoxPair : HitCharacter->BoxCollision)
+	{
+		if (HitBoxPair.Value != nullptr)
+		{
+			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
+			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
+			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+			HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
+}
+
+void ULagCompensationComponent::EnableCharacterMeshCollision(AShooterCharacter* HitCharacter, ECollisionEnabled::Type CollisionType)
+{
+	if (HitCharacter && HitCharacter->GetMesh())
+	{
+		HitCharacter->GetMesh()->SetCollisionEnabled(CollisionType);
+	}
+}
+
 FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage& OlderFrame,
-	const FFramePackage& YoungerFrame, float HiTime)
+                                                             const FFramePackage& YoungerFrame, float HiTime)
 {
 	const float Distance = YoungerFrame.Time - OlderFrame.Time;
 	const float InterpFraction = FMath::Clamp((HiTime - OlderFrame.Time) / Distance, 0.f, 1.f);

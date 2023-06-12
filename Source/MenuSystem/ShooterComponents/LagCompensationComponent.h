@@ -71,7 +71,6 @@ public:
 	friend class AShooterCharacter;
 	void ShowFramePackage(const FFramePackage& Package);
 	//void ShowFramePackageCapsule(FFramePackage& Package);
-	void ServerSideRewind(AShooterCharacter* HitCharacter, const FVector_NetQuantize&);
 
 	FServerSideRewindResult ProjectileServerSideRewindResult(
 		AShooterCharacter* HitCharacter,
@@ -84,7 +83,7 @@ protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package);
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HiTime);
-
+	FFramePackage GetFrameToCheck(AShooterCharacter* HitCharacter, float HitTime);
 	FServerSideRewindResult ProjectileConfirmHit(
 		const FFramePackage& Package,
 		AShooterCharacter* HitCharacter,
@@ -95,6 +94,8 @@ protected:
 
 	void CacheBoxPosition(AShooterCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveBoxes(AShooterCharacter* HitCharacter, const FFramePackage& Package);
+	void ResetHitBoxes(AShooterCharacter* HitCharacter, const FFramePackage& Package);
+	void EnableCharacterMeshCollision(AShooterCharacter* HitCharacter, ECollisionEnabled::Type CollisionType);
 	//void SaveFramePackageCapsule(FFramePackage& Package);
 	//void TickCapsule();
 	//void TickPhysicAsset();
