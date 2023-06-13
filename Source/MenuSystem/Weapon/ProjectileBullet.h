@@ -13,6 +13,13 @@ UCLASS()
 class MENUSYSTEM_API AProjectileBullet : public AProjectile
 {
 	GENERATED_BODY()
+
+public:
+	AProjectileBullet();
+	
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 	
 protected:
 	virtual void OnHit(
@@ -21,10 +28,13 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse,
 		const FHitResult& Hit) override;
-	
+
+	virtual void BeginPlay() override;
 private:
 	UPROPERTY()
 	TObjectPtr<class AShooterHUD> HUD;
 	UPROPERTY()
 	TObjectPtr<class AShooterPlayerController> Controller;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UProjectileMovementComponent> ProjectileMovementComponent;
 };

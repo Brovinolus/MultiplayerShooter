@@ -36,6 +36,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
+	void AddDisableSSR_OnHighPing();
+	void RemoveDisableSSR_OnHighPing();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void FireWeapon(const FVector& HitTarget);
 	void WeaponDropped();
@@ -113,6 +115,16 @@ protected:
 		int32 OtherBodyIndex
 		);
 
+	UPROPERTY(Replicated, EditAnywhere)
+	bool bUseServerSideRewind = false;
+
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
+
+	UFUNCTION()
+	void OnHighPing(bool bPingHigh);
+
+	void OnWeaponStateSet();
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
@@ -130,6 +142,10 @@ private:
 	UFUNCTION()
 	void OnRep_WeaponState();
 
+	bool HasSetController = false;
+
+	void SetController();
+
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	TObjectPtr<class UWidgetComponent> PickupWidget;
 
@@ -139,18 +155,27 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TObjectPtr<UAnimationAsset> FireAnimationWithoutParticles;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 
+	// The number of unprocessed server requests for Ammo
+	// Incremented in SpendRound, decremented in ClientUpdateAmmo
+	int32 Sequence = 0;
+
 	UPROPERTY(EditAnywhere)
 	int32 MaxAmmo;
 
-	UFUNCTION()
-	void OnRep_Ammo();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
 
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+
+	int32 SetAmmo(int32 NewAmmoValue);
+	
 	void SpendRound();
 
 	bool bCanShowParticlesInFireAnimation = true;
@@ -173,4 +198,5 @@ public:
 	bool IsAmmoEmpty();
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 };

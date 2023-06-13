@@ -32,6 +32,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME_CONDITION(UCombatComponent, MaxWeaponAmmo, COND_OwnerOnly);
@@ -121,25 +122,36 @@ void UCombatComponent::Fire()
 	{
 		if(CanFire())
 		{
-			if (!Character->HasAuthority())
-			{
-				ServerFire(HitTarget);
-			}
-
-			LocalFire(HitTarget);
+			bCanFire = false;
 			if(EquippedWeapon)
 			{
-				bCanFire = false;
 				CrosshairShootFactor = CrosshairShootFactorTarget;
+				FireProjectile();
 			}
 			StartFireTimer();
 		}
 	}
 }
 
+void UCombatComponent::FireProjectile()
+{
+	if(EquippedWeapon && Character)
+	{
+		// for clients
+		if (!Character->HasAuthority())
+		{
+			LocalFire(HitTarget);
+		}
+
+		// calls multicast for the server and the clients who didn't shoot
+		ServerFire(HitTarget);
+	}
+}
+
 bool UCombatComponent::CanFire()
 {
 	if (!EquippedWeapon) return false;
+	if(bLocallyReloading) return false;
 	if (EquippedWeapon->IsAmmoEmpty()) return false;
 	if(!bCanFire) return false;
 	if(CombatState == ECombatState::ECS_Reloading) return false;
@@ -192,6 +204,7 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
+	// checking it so the client who is shooting doesn't call the local fire twice and doesn't deal damage twice
 	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	
 	LocalFire(TraceHitTarget);
@@ -203,6 +216,7 @@ void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
+		// calls FireWeapon() in Weapon fore effects and ProjectileWeapon to spawn a projectile
 		EquippedWeapon->FireWeapon(TraceHitTarget);
 	}
 }
@@ -262,10 +276,12 @@ void UCombatComponent::ReloadWeapon()
 	// we call server rpc is there is a point
 	if(EquippedWeapon == nullptr) return;
 
-	if (MaxWeaponAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon->GetAmmo() < EquippedWeapon->
-		GetMagCapacity())
+	if (MaxWeaponAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon->GetAmmo() < EquippedWeapon->
+		GetMagCapacity() && !bLocallyReloading)
 	{
 		ServerReload();
+		HandleReload();
+		bLocallyReloading = true;
 	}
 }
 
@@ -295,12 +311,13 @@ void UCombatComponent::ServerReload_Implementation()
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
 	
 	CombatState = ECombatState::ECS_Reloading;
-	HandleReload();
+	if(!Character->IsLocallyControlled()) HandleReload();
 }
 
 void UCombatComponent::FinishReloading()
 {
 	if (Character == nullptr) return;
+	bLocallyReloading = false;
 	if(Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -317,7 +334,7 @@ void UCombatComponent::OnRep_CombatState()
 	switch (CombatState)
 	{
 	case ECombatState::ECS_Reloading:
-		HandleReload();
+		if(Character && !Character->IsLocallyControlled()) HandleReload();
 		break;
 	case ECombatState::ECS_Unoccupied:
 		if (bFireButtonPressed)
@@ -330,7 +347,10 @@ void UCombatComponent::OnRep_CombatState()
 
 void UCombatComponent::HandleReload()
 {
-	Character->PlayReloadMontage();
+	if (Character)
+	{
+		Character->PlayReloadMontage();
+	}
 }
 
 int32 UCombatComponent::AmountToReload()
@@ -355,6 +375,7 @@ void UCombatComponent::SpawnDefaultWeapon()
 	if (ShooterGameMode && World && Character && !Character->IsCharacterEliminated() && DefaultWeapon)
 	{
 		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeapon);
+		StartingWeapon->SetOwner(Character);
 		StartingWeapon->bDestroyWeapon = true;
 		EquipWeapon(StartingWeapon);
 	}
@@ -567,6 +588,16 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 		{
 			Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 		}
+		
+		bAimButtonPressed = bIsAiming;
+	}
+}
+
+void UCombatComponent::OnRep_Aiming()
+{
+	if (Character && Character->IsLocallyControlled())
+	{
+		bAiming = bAimButtonPressed;
 	}
 }
 

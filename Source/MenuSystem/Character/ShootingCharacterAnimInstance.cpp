@@ -114,8 +114,12 @@ void UShootingCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				*/
 		}
 	
-		bUseFabrik = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
-		bUseAimOffsets = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
-		bTransformRightHand = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+		bUseFabrik = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+		if (ShooterCharacter->IsLocallyControlled())
+		{
+			bUseFabrik = !ShooterCharacter->IsLocallyReloading();
+		}
+		bUseAimOffsets = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+		bTransformRightHand = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 	}
 }

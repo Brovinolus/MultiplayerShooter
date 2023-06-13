@@ -16,6 +16,17 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 
+	// Server-side rewind
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize TraceStart;
+	// 2 decimal place of precision
+	FVector_NetQuantize100 InitialVelocity;
+
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000;
+	
+	float Damage = 20.f;
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -27,9 +38,6 @@ protected:
 		FVector NormalImpulse,
 		const FHitResult& Hit);
 
-	UPROPERTY(EditAnywhere)
-	float Damage = 20.f;
-
 	UPROPERTY(EditAnywhere, Category = "Widgets")
 	TSubclassOf<UUserWidget> WidgetHitClass;
 
@@ -39,9 +47,6 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UBoxComponent> CollisionBox;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<class UProjectileMovementComponent> ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UParticleSystem> Tracer;
@@ -53,6 +58,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class USoundCue> StoneImpactSounds;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UParticleSystem> CharacterImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USoundCue> CharacterImpactSounds;
 
 	UPROPERTY()
 	TObjectPtr<class AShooterCharacter> ShooterCharacterReceivingHit;

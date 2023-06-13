@@ -23,8 +23,22 @@ void AShooterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	PingValue();
+	PingValue(DeltaSeconds);
 	UpdateHUDValues();
+
+	CheckTimeSync(DeltaSeconds);
+
+	SetHUDTime();
+}
+
+void AShooterPlayerController::CheckTimeSync(float DeltaSeconds)
+{
+	TimeSyncRunningTime += DeltaSeconds;
+	if(IsLocalController() && TimeSyncRunningTime > TimeSyncFrequency)
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+		TimeSyncRunningTime = 0.f;
+	}
 }
 
 void AShooterPlayerController::OnPossess(APawn* InPawn)
@@ -37,21 +51,47 @@ void AShooterPlayerController::OnPossess(APawn* InPawn)
 	}
 }
 
-void AShooterPlayerController::PingValue()
+void AShooterPlayerController::PingValue(float DeltaSeconds)
 {
+	HighPingRunningTime += DeltaSeconds;
+
 	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
 
 	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD
-		->CharacterOverlay->PingValue;
-	if(bHUDValid)
+	                                                               ->CharacterOverlay->PingValue;
+	if (bHUDValid)
 	{
 		ShooterPlayerState = ShooterPlayerState == nullptr ? GetPlayerState<AShooterPlayerState>() : ShooterPlayerState;
 		if (ShooterPlayerState)
 		{
-			FString PingValue = FString::Printf(TEXT("%d"), FMath::FloorToInt(ShooterPlayerState->GetPingInMilliseconds()));
+			FString PingValue = FString::Printf(
+				TEXT("%d"), FMath::FloorToInt(ShooterPlayerState->GetPingInMilliseconds()));
 			ShooterHUD->CharacterOverlay->PingValue->SetText(FText::FromString(PingValue));
+
+			if (HighPingRunningTime > CheckPingFrequency)
+			{
+				if (ShooterPlayerState->GetPingInMilliseconds() > HighPingThreshold)
+				{
+					ServerReportPingStatus(true);
+					
+					ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Disabled"));
+				}
+				else
+				{
+					ServerReportPingStatus(false);
+
+					ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Enabled"));
+				}
+				
+				HighPingRunningTime = 0.f;
+			}
 		}
 	}
+}
+
+void AShooterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	HighPingDelegate.Broadcast(bHighPing);
 }
 
 void AShooterPlayerController::UpdateHUDValues()
@@ -69,6 +109,34 @@ void AShooterPlayerController::UpdateHUDValues()
 			}
 		}
 	}
+}
+
+void AShooterPlayerController::SetHUDTime()
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->HealthBar && ShooterHUD
+		->CharacterOverlay->MatchTime;
+	if(bHUDValid)
+	{
+		uint32 MatchTime = FMath::CeilToInt(GetServerTime());
+		FString MatchTimeText = FString::Printf(TEXT("%d"), MatchTime);
+		ShooterHUD->CharacterOverlay->MatchTime->SetText(FText::FromString(MatchTimeText));
+	}
+}
+
+void AShooterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
+{
+	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
+}
+
+void AShooterPlayerController::ClientReportServerTime_Implementation(float TimeOfClientRequest,
+	float TimeServerReceivedClientRequest)
+{
+	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
+	SingleTripTime = (0.5f * RoundTripTime);
+	float CurrentServerTime = TimeServerReceivedClientRequest + SingleTripTime;
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
 void AShooterPlayerController::SetHUDHealth(float Health, float MaxHealth)
@@ -162,5 +230,20 @@ void AShooterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
 		}
 
 		ShooterHUD->CharacterOverlay->WeaponType->SetText(FText::FromString(WeaponTypeText));
+	}
+}
+
+float AShooterPlayerController::GetServerTime()
+{
+	return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+}
+
+void AShooterPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+
+	if (IsLocalController())
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 	}
 }

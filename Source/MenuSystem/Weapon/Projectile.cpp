@@ -26,8 +26,8 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic,ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
 
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
+	//ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	//ProjectileMovementComponent->bRotationFollowsVelocity = true;
 }
 
 void AProjectile::BeginPlay()
@@ -47,7 +47,7 @@ void AProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 			);
 	}
-
+	
 	if (WidgetHitClass)
 	{
 		WidgetHitInstance = CreateWidget<UUserWidget>(GetWorld(), WidgetHitClass);
@@ -72,8 +72,6 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	ShooterCharacterReceivingHit = Cast<AShooterCharacter>(OtherActor);
 	if (ShooterCharacterReceivingHit)
 	{
-		ShooterCharacterReceivingHit->MulticastHit(Hit.ImpactPoint);
-
 		Client_ShowHitWidget();
 	}
 	
@@ -123,10 +121,18 @@ void AProjectile::Destroyed()
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StoneImpactParticles, GetActorTransform());
 	}
+	else
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CharacterImpactParticles, GetActorTransform());
+	}
 
 	if (StoneImpactSounds && ShooterCharacterReceivingHit == nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, StoneImpactSounds, GetActorLocation());
+	}
+	else
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, CharacterImpactSounds, GetActorLocation());
 	}
 }
 
