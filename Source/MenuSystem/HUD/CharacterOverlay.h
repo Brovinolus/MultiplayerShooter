@@ -41,4 +41,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> MatchTime;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> SSR_State;
 };

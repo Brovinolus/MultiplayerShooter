@@ -73,10 +73,14 @@ void AShooterPlayerController::PingValue(float DeltaSeconds)
 				if (ShooterPlayerState->GetPingInMilliseconds() > HighPingThreshold)
 				{
 					ServerReportPingStatus(true);
+					
+					ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Disabled"));
 				}
 				else
 				{
 					ServerReportPingStatus(false);
+
+					ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Enabled"));
 				}
 				
 				HighPingRunningTime = 0.f;
