@@ -6,14 +6,12 @@
 #include "../Character/ShooterCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "MenuSystem/PlayerController/ShooterPlayerController.h"
 #include "Net/UnrealNetwork.h"
-#include "Sound/SoundCue.h"
 
 AWeapon::AWeapon()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
@@ -51,6 +49,8 @@ void AWeapon::BeginPlay()
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	SetController();
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -58,6 +58,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -80,6 +81,12 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	{
 		ShootingCharacter->SetOverlappingWeapon(nullptr);
 	}
+}
+
+void AWeapon::OnHighPing(bool bPingHigh)
+{
+	bUseServerSideRewind = !bPingHigh;
+	UE_LOG(LogTemp, Warning, TEXT("PingHigh: %s"), bUseServerSideRewind ? TEXT("true") : TEXT("false"))
 }
 
 int32 AWeapon::SetAmmo(int32 NewAmmoValue)
@@ -165,6 +172,16 @@ void AWeapon::SetHUDAmmo()
 void AWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State;
+	OnWeaponStateSet();
+}
+
+void AWeapon::OnRep_WeaponState()
+{
+	OnWeaponStateSet();
+}
+
+void AWeapon::OnWeaponStateSet()
+{
 	switch (WeaponState)
 	{
 	case EWeaponState::EWS_Equipped:
@@ -173,6 +190,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		AddDisableSSR_OnHighPing();
 		break;
 	case EWeaponState::EWS_Dropped:
 		if (HasAuthority())
@@ -182,7 +200,65 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		RemoveDisableSSR_OnHighPing();
 		break;
+	}
+}
+
+void AWeapon::SetController()
+{
+	if (!HasSetController && HasAuthority() && ShooterOwnerCharacter && ShooterOwnerCharacter->Controller)
+	{
+		ShooterOwnerController = ShooterOwnerController == nullptr ? Cast<AShooterPlayerController>(ShooterOwnerCharacter->Controller) : ShooterOwnerController;
+		if (ShooterOwnerController && !ShooterOwnerController->HighPingDelegate.IsBound())
+		{
+			ShooterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnHighPing);
+			HasSetController = true;
+		}
+	}
+}
+
+void AWeapon::AddDisableSSR_OnHighPing()
+{
+	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr
+								? Cast<AShooterCharacter>(GetOwner())
+								: ShooterOwnerCharacter;
+	if (ShooterOwnerCharacter && bUseServerSideRewind)
+	{
+		ShooterOwnerController = ShooterOwnerController == nullptr
+									 ? Cast<AShooterPlayerController>(ShooterOwnerCharacter->Controller)
+									 : ShooterOwnerController;
+
+		if(IsValid(ShooterOwnerController) && HasAuthority())
+		{
+			if (!ShooterOwnerController->HighPingDelegate.IsBound())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Add OnHighPing"));
+				ShooterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnHighPing);
+			}
+		}
+	}
+}
+
+void AWeapon::RemoveDisableSSR_OnHighPing()
+{
+	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr
+								? Cast<AShooterCharacter>(GetOwner())
+								: ShooterOwnerCharacter;
+	if (ShooterOwnerCharacter && bUseServerSideRewind)
+	{
+		ShooterOwnerController = ShooterOwnerController == nullptr
+									 ? Cast<AShooterPlayerController>(ShooterOwnerCharacter->Controller)
+									 : ShooterOwnerController;
+
+		if(IsValid(ShooterOwnerController) && HasAuthority())
+		{
+			if (ShooterOwnerController->HighPingDelegate.IsBound())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Remove DisableSSR"));
+				ShooterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnHighPing);
+			}
+		}
 	}
 }
 
@@ -194,24 +270,6 @@ void AWeapon::SetCanShowParticlesInFireAnimation(bool bCanShowParticles)
 bool AWeapon::IsAmmoEmpty()
 {
 	return Ammo <= 0;
-}
-
-void AWeapon::OnRep_WeaponState()
-{
-	switch (WeaponState)
-	{
-	case EWeaponState::EWS_Equipped:
-		ShowPickupWidget(false);
-		WeaponMesh->SetSimulatePhysics(false);
-		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		break;
-	case EWeaponState::EWS_Dropped:
-		WeaponMesh->SetSimulatePhysics(true);
-		WeaponMesh->SetEnableGravity(true);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		break;
-	}
 }
 
 void AWeapon::ShowPickupWidget(bool bShowWidget)
@@ -247,15 +305,5 @@ void AWeapon::WeaponDropped()
 	SetOwner(nullptr);
 	ShooterOwnerCharacter = nullptr;
 	ShooterOwnerController = nullptr;
-
-	/*
-	if (DropSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			DropSound,
-			GetActorLocation()
-		);
-	}*/
 }
 

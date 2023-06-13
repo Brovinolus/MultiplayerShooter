@@ -90,6 +90,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package);
+	void SaveFramePackage();
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HiTime);
 	FFramePackage GetFrameToCheck(AShooterCharacter* HitCharacter, float HitTime);
 	FServerSideRewindResult ProjectileConfirmHit(
@@ -104,6 +105,10 @@ protected:
 	void MoveBoxes(AShooterCharacter* HitCharacter, const FFramePackage& Package);
 	void ResetHitBoxes(AShooterCharacter* HitCharacter, const FFramePackage& Package);
 	void EnableCharacterMeshCollision(AShooterCharacter* HitCharacter, ECollisionEnabled::Type CollisionType);
+
+	// Character Hit Notification and Effects
+	void CharacterHit();
+
 	//void SaveFramePackageCapsule(FFramePackage& Package);
 	//void TickCapsule();
 	//void TickPhysicAsset();
@@ -114,7 +119,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<APlayerController> Controller;
 
-	std::deque<FFramePackage> FrameHistory;
+	//std::deque<FFramePackage> FrameHistory;
+	TDoubleLinkedList<FFramePackage> FrameHistory;
 
 	UPROPERTY(EditAnywhere)
 	float MaxRecordTime = 4.f;

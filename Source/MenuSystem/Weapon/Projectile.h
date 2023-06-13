@@ -59,6 +59,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class USoundCue> StoneImpactSounds;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UParticleSystem> CharacterImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USoundCue> CharacterImpactSounds;
+
 	UPROPERTY()
 	TObjectPtr<class AShooterCharacter> ShooterCharacterReceivingHit;
 

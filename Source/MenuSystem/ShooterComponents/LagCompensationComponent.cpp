@@ -5,6 +5,7 @@
 
 #include "MenuSystem/Character/ShooterCharacter.h"
 #include "DrawDebugHelpers.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/GameplayStaticsTypes.h"
@@ -14,7 +15,6 @@
 ULagCompensationComponent::ULagCompensationComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	
 }
 
 // algorithm to check frames and interpolate if it is necessary
@@ -22,6 +22,60 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(AShooterCharacter* HitC
 {
 	UE_LOG(LogTemp, Warning, TEXT("GetFrameToCheck"));
 	
+	bool bReturn =
+		HitCharacter == nullptr ||
+		HitCharacter->GetLagCompensation() == nullptr ||
+		HitCharacter->GetLagCompensation()->FrameHistory.GetHead() == nullptr ||
+		HitCharacter->GetLagCompensation()->FrameHistory.GetTail() == nullptr;
+	if (bReturn) return FFramePackage();
+	// Frame package that we check to verify a hit
+	FFramePackage FrameToCheck;
+	bool bShouldInterpolate = true;
+	// Frame history of the HitCharacter
+	const TDoubleLinkedList<FFramePackage>& History = HitCharacter->GetLagCompensation()->FrameHistory;
+	const float OldestHistoryTime = History.GetTail()->GetValue().Time;
+	const float NewestHistoryTime = History.GetHead()->GetValue().Time;
+	if (OldestHistoryTime > HitTime)
+	{
+		// too far back - too laggy to do SSR
+		return FFramePackage();
+	}
+	if (OldestHistoryTime == HitTime)
+	{
+		FrameToCheck = History.GetTail()->GetValue();
+		bShouldInterpolate = false;
+	}
+	if (NewestHistoryTime <= HitTime)
+	{
+		FrameToCheck = History.GetHead()->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Younger = History.GetHead();
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Older = Younger;
+	while (Older->GetValue().Time > HitTime) // is Older still younger than HitTime?
+		{
+		// March back until: OlderTime < HitTime < YoungerTime
+		if (Older->GetNextNode() == nullptr) break;
+		Older = Older->GetNextNode();
+		if (Older->GetValue().Time > HitTime)
+		{
+			Younger = Older;
+		}
+		}
+	if (Older->GetValue().Time == HitTime) // highly unlikely, but we found our frame to check
+		{
+		FrameToCheck = Older->GetValue();
+		bShouldInterpolate = false;
+		}
+	if (bShouldInterpolate)
+	{
+		// Interpolate between Younger and Older
+		FrameToCheck = InterpBetweenFrames(Older->GetValue(), Younger->GetValue(), HitTime);
+	}
+
+	return FrameToCheck;
+		/*
 	bool bReturn =
 		HitCharacter == nullptr ||
 		HitCharacter->GetLagCompensation() == nullptr ||
@@ -79,8 +133,10 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(AShooterCharacter* HitC
 	if (bShouldInterpolate)
 	{
 		FrameToCheck = InterpBetweenFrames(*OlderFrame, *YoungerFrame, HitTime);
+		UE_LOG(LogTemp, Warning, TEXT("GetFrameToCheck: bShouldInterpolate"));
 	}
 	return FrameToCheck;
+	*/
 }
 
 FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewindResult(AShooterCharacter* HitCharacter,
@@ -101,6 +157,8 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ASho
 	
 	if (Character && HitCharacter && Confirm.bHitConfirmed)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Confirm.bHitConfirmed"));
+		
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
 			Character->GetEquippedWeapon()->GetDamage(),
@@ -108,6 +166,8 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ASho
 			Character->GetEquippedWeapon(),
 			UDamageType::StaticClass()
 		);
+
+		CharacterHit();
 	}
 }
 
@@ -151,9 +211,13 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 			if (Box)
 			{
 				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
-				             FQuat(Box->GetComponentRotation()), FColor::Red, true);
+				             FQuat(Box->GetComponentRotation()), FColor::Red, false, 4.f);
 
-				UE_LOG(LogTemp, Warning, TEXT("Headshot"));
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(12, 1.f, FColor::Turquoise,
+					FString::Printf(TEXT("***HEADSHOT***")));     
+				}
 			}
 		}
 
@@ -161,7 +225,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryOnly);
 		return FServerSideRewindResult{true, true };
 	}
-	else
+	else // we didn't hit the head; check the rest of the boxes
 	{
 		for (auto& HitBoxPair : HitCharacter->BoxCollision)
 		{
@@ -182,9 +246,13 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 				if (Box)
 				{
 					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
-								 FQuat(Box->GetComponentRotation()), FColor::Blue, true);
+								 FQuat(Box->GetComponentRotation()), FColor::Blue, false, 4.f);
 
-					UE_LOG(LogTemp, Warning, TEXT("Hit body"));
+					if (GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(12, 1.f, FColor::Turquoise,
+						FString::Printf(TEXT("***HitBody***")));     
+					}
 				}
 			}
 
@@ -228,9 +296,14 @@ void ULagCompensationComponent::MoveBoxes(AShooterCharacter* HitCharacter, const
 	{
 		if (HitBoxPair.Value != nullptr)
 		{
-			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
-			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
-			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+			const FBoxInformation* BoxValue = Package.HitBoxInfo.Find(HitBoxPair.Key);
+			
+			if (BoxValue)
+			{
+				HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
+				HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
+				HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+			}
 		}
 	}
 }
@@ -245,10 +318,15 @@ void ULagCompensationComponent::ResetHitBoxes(AShooterCharacter* HitCharacter, c
 	{
 		if (HitBoxPair.Value != nullptr)
 		{
-			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
-			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
-			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
-			HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			const FBoxInformation* BoxValue = Package.HitBoxInfo.Find(HitBoxPair.Key);
+			
+			if (BoxValue)
+			{
+				HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
+				HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
+				HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
 		}
 	}
 }
@@ -458,10 +536,41 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 	}
 }
 
+void ULagCompensationComponent::SaveFramePackage()
+{
+	if (Character == nullptr || !Character->HasAuthority()) return;
+	if (FrameHistory.Num() <= 1)
+	{
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame);
+	}
+	else
+	{
+		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		while (HistoryLength > MaxRecordTime)
+		{
+			FrameHistory.RemoveNode(FrameHistory.GetTail());
+			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		}
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame);
+	}
+}
+
+void ULagCompensationComponent::CharacterHit()
+{
+	
+}
+
 void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
+
+	SaveFramePackage();
+
+	/*
 	if (FrameHistory.size() <= 1)
 	{
 		FFramePackage ThisFrame;
@@ -481,6 +590,6 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		FrameHistory.push_front(ThisFrame);
 
 		//ShowFramePackage(ThisFrame);
-	}
+	}*/
 }
 

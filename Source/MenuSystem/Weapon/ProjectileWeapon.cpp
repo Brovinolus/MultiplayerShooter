@@ -35,6 +35,8 @@ void AProjectileWeapon::FireWeapon(const FVector& HitTarget)
 		{
 			if (bLocallyControlled) // server, host - use replicated projectile, no SSR
 			{
+				UE_LOG(LogTemp, Warning, TEXT("server, host: spawn ProjectileClass"));
+				
 				SpawnedProjectile = World->SpawnActor<AProjectile>(
 					ProjectileClass,
 					SocketTransform.GetLocation(),
@@ -44,9 +46,9 @@ void AProjectileWeapon::FireWeapon(const FVector& HitTarget)
 				SpawnedProjectile->bUseServerSideRewind = false;
 				SpawnedProjectile->Damage = Damage;
 			}
-			else // server, not locally controlled - spawn non-replicated projectile, no SSR
+			else // server, not locally controlled - spawn non-replicated projectile, use SSR
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ServerSideRewindProjectileClass"));
+				UE_LOG(LogTemp, Warning, TEXT("server, not locally controlled: spawn ServerSideRewindProjectileClass "));
 				
 				SpawnedProjectile = World->SpawnActor<AProjectile>(
 					ServerSideRewindProjectileClass,
@@ -59,8 +61,8 @@ void AProjectileWeapon::FireWeapon(const FVector& HitTarget)
 		}
 		else // client, using SSR
 		{
-			if (bLocallyControlled)
 			// client, locally controlled - spawn non-replicated projectile, use SSR
+			if (bLocallyControlled)
 			{
 				SpawnedProjectile = World->SpawnActor<AProjectile>(
 					ServerSideRewindProjectileClass,

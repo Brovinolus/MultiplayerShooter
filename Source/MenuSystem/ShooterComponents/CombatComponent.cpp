@@ -32,6 +32,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME_CONDITION(UCombatComponent, MaxWeaponAmmo, COND_OwnerOnly);
@@ -374,6 +375,7 @@ void UCombatComponent::SpawnDefaultWeapon()
 	if (ShooterGameMode && World && Character && !Character->IsCharacterEliminated() && DefaultWeapon)
 	{
 		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeapon);
+		StartingWeapon->SetOwner(Character);
 		StartingWeapon->bDestroyWeapon = true;
 		EquipWeapon(StartingWeapon);
 	}

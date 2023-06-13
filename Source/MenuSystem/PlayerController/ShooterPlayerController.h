@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "ShooterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingHigh);
+
 enum class EWeaponType : uint8;
 /**
  * 
@@ -26,12 +28,14 @@ public:
 	virtual float GetServerTime(); // Synced with server world clock
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible
 	float SingleTripTime = 0.f;
+
+	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override;
 	void CheckTimeSync(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnPossess(APawn* InPawn) override;
-	void PingValue();
+	void PingValue(float DeltaSeconds);
 	void UpdateHUDValues();
 	void SetHUDTime();
 
@@ -57,8 +61,18 @@ private:
 	TObjectPtr<class AShooterHUD> ShooterHUD;
 	UPROPERTY()
 	TObjectPtr<class AShooterPlayerState> ShooterPlayerState;
-
 	TObjectPtr<class UCharacterOverlay> CharacterOverlay;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 500.f;
+
+	float HighPingRunningTime = 0.f;
+	
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
+	
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20.f;
 
 	float HUDMaxAmmo;
 	bool bInitializeMaxAmmo = false;

@@ -23,7 +23,7 @@ void AShooterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	PingValue();
+	PingValue(DeltaSeconds);
 	UpdateHUDValues();
 
 	CheckTimeSync(DeltaSeconds);
@@ -51,21 +51,43 @@ void AShooterPlayerController::OnPossess(APawn* InPawn)
 	}
 }
 
-void AShooterPlayerController::PingValue()
+void AShooterPlayerController::PingValue(float DeltaSeconds)
 {
+	HighPingRunningTime += DeltaSeconds;
+
 	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
 
 	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD
-		->CharacterOverlay->PingValue;
-	if(bHUDValid)
+	                                                               ->CharacterOverlay->PingValue;
+	if (bHUDValid)
 	{
 		ShooterPlayerState = ShooterPlayerState == nullptr ? GetPlayerState<AShooterPlayerState>() : ShooterPlayerState;
 		if (ShooterPlayerState)
 		{
-			FString PingValue = FString::Printf(TEXT("%d"), FMath::FloorToInt(ShooterPlayerState->GetPingInMilliseconds()));
+			FString PingValue = FString::Printf(
+				TEXT("%d"), FMath::FloorToInt(ShooterPlayerState->GetPingInMilliseconds()));
 			ShooterHUD->CharacterOverlay->PingValue->SetText(FText::FromString(PingValue));
+
+			if (HighPingRunningTime > CheckPingFrequency)
+			{
+				if (ShooterPlayerState->GetPingInMilliseconds() > HighPingThreshold)
+				{
+					ServerReportPingStatus(true);
+				}
+				else
+				{
+					ServerReportPingStatus(false);
+				}
+				
+				HighPingRunningTime = 0.f;
+			}
 		}
 	}
+}
+
+void AShooterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	HighPingDelegate.Broadcast(bHighPing);
 }
 
 void AShooterPlayerController::UpdateHUDValues()

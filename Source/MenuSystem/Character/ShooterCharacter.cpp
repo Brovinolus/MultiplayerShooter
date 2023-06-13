@@ -254,8 +254,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	//DrawDebugPhysicsAsset();
 
 	UpdateHUDHealth();
 
@@ -635,22 +633,6 @@ void AShooterCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
-void AShooterCharacter::MulticastHit_Implementation(const FVector_NetQuantize& HitLocation)
-{
-	/*
-	if(CharacterImpactParticles)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CharacterImpactParticles, HitLocation);
-	}
-
-	if (CharacterImpactSounds)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, CharacterImpactSounds, HitLocation);
-	}
-	
-	PlayHitReactMontage();
-	*/
-}
 
 void AShooterCharacter::ServerEquipButtonPressed_Implementation()
 {

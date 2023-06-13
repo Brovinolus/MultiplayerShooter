@@ -36,6 +36,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
+	void AddDisableSSR_OnHighPing();
+	void RemoveDisableSSR_OnHighPing();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void FireWeapon(const FVector& HitTarget);
 	void WeaponDropped();
@@ -113,12 +115,16 @@ protected:
 		int32 OtherBodyIndex
 		);
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false;
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
 
+	UFUNCTION()
+	void OnHighPing(bool bPingHigh);
+
+	void OnWeaponStateSet();
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
@@ -135,6 +141,10 @@ private:
 	
 	UFUNCTION()
 	void OnRep_WeaponState();
+
+	bool HasSetController = false;
+
+	void SetController();
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	TObjectPtr<class UWidgetComponent> PickupWidget;
