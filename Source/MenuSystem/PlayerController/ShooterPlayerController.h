@@ -25,6 +25,7 @@ public:
 
 	virtual float GetServerTime(); // Synced with server world clock
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible
+	float SingleTripTime = 0.f;
 protected:
 	virtual void BeginPlay() override;
 	void CheckTimeSync(float DeltaSeconds);

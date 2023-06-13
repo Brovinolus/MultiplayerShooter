@@ -121,19 +121,29 @@ void UCombatComponent::Fire()
 	{
 		if(CanFire())
 		{
-			if (!Character->HasAuthority())
-			{
-				ServerFire(HitTarget);
-			}
-
-			LocalFire(HitTarget);
+			bCanFire = false;
 			if(EquippedWeapon)
 			{
-				bCanFire = false;
 				CrosshairShootFactor = CrosshairShootFactorTarget;
+				FireProjectile();
 			}
 			StartFireTimer();
 		}
+	}
+}
+
+void UCombatComponent::FireProjectile()
+{
+	if(EquippedWeapon && Character)
+	{
+		// for clients
+		if (!Character->HasAuthority())
+		{
+			LocalFire(HitTarget);
+		}
+
+		// calls multicast for the server and the clients who didn't shoot
+		ServerFire(HitTarget);
 	}
 }
 
@@ -193,6 +203,7 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
+	// checking it so the client who is shooting doesn't call the local fire twice and doesn't deal damage twice
 	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	
 	LocalFire(TraceHitTarget);
@@ -204,6 +215,7 @@ void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
+		// calls FireWeapon() in Weapon fore effects and ProjectileWeapon to spawn a projectile
 		EquippedWeapon->FireWeapon(TraceHitTarget);
 	}
 }

@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/GameplayStaticsTypes.h"
 #include "MenuSystem/MenuSystem.h"
+#include "MenuSystem/Weapon/Weapon.h"
 
 ULagCompensationComponent::ULagCompensationComponent()
 {
@@ -19,6 +20,8 @@ ULagCompensationComponent::ULagCompensationComponent()
 // algorithm to check frames and interpolate if it is necessary
 FFramePackage ULagCompensationComponent::GetFrameToCheck(AShooterCharacter* HitCharacter, float HitTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("GetFrameToCheck"));
+	
 	bool bReturn =
 		HitCharacter == nullptr ||
 		HitCharacter->GetLagCompensation() == nullptr ||
@@ -83,15 +86,38 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(AShooterCharacter* HitC
 FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewindResult(AShooterCharacter* HitCharacter,
 	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ProjectileServerSideRewindResult"));
+	
 	FFramePackage FrameToCheck = GetFrameToCheck(HitCharacter, HitTime);
 	return ProjectileConfirmHit(FrameToCheck, HitCharacter, TraceStart, InitialVelocity, HitTime);
 }
 
-FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FFramePackage& Package, AShooterCharacter* HitCharacter,
+void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(AShooterCharacter* HitCharacter,
 	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
+{
+	FServerSideRewindResult Confirm = ProjectileServerSideRewindResult(HitCharacter, TraceStart, InitialVelocity, HitTime);
+
+	UE_LOG(LogTemp, Warning, TEXT("ProjectileServerScoreRequest"));
+	
+	if (Character && HitCharacter && Confirm.bHitConfirmed)
+	{
+		UGameplayStatics::ApplyDamage(
+			HitCharacter,
+			Character->GetEquippedWeapon()->GetDamage(),
+			Character->Controller,
+			Character->GetEquippedWeapon(),
+			UDamageType::StaticClass()
+		);
+	}
+}
+
+FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FFramePackage& Package, AShooterCharacter* HitCharacter,
+                                                                        const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
 {
 	if (HitCharacter == nullptr) return  FServerSideRewindResult();
 
+	UE_LOG(LogTemp, Warning, TEXT("ProjectileConfirmHit"));
+	
 	FFramePackage CurrentFrame;
 	CacheBoxPosition(HitCharacter, CurrentFrame);
 	MoveBoxes(HitCharacter, Package);
@@ -125,7 +151,9 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 			if (Box)
 			{
 				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
-				             FQuat(Box->GetComponentRotation()), FColor::Red);
+				             FQuat(Box->GetComponentRotation()), FColor::Red, true);
+
+				UE_LOG(LogTemp, Warning, TEXT("Headshot"));
 			}
 		}
 
@@ -154,7 +182,9 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 				if (Box)
 				{
 					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
-								 FQuat(Box->GetComponentRotation()), FColor::Red);
+								 FQuat(Box->GetComponentRotation()), FColor::Blue, true);
+
+					UE_LOG(LogTemp, Warning, TEXT("Hit body"));
 				}
 			}
 
@@ -173,6 +203,8 @@ void ULagCompensationComponent::CacheBoxPosition(AShooterCharacter* HitCharacter
 {
 	if(HitCharacter == nullptr) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("CacheBoxPosition"));
+	
 	for (auto& HitBoxPair : HitCharacter->BoxCollision)
 	{
 		if (HitBoxPair.Value != nullptr)
@@ -190,6 +222,8 @@ void ULagCompensationComponent::MoveBoxes(AShooterCharacter* HitCharacter, const
 {
 	if(HitCharacter == nullptr) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("MoveBoxes"));
+	
 	for (auto& HitBoxPair : HitCharacter->BoxCollision)
 	{
 		if (HitBoxPair.Value != nullptr)
@@ -205,6 +239,8 @@ void ULagCompensationComponent::ResetHitBoxes(AShooterCharacter* HitCharacter, c
 {
 	if(HitCharacter == nullptr) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("ResetHitBoxes"));
+	
 	for (auto& HitBoxPair : HitCharacter->BoxCollision)
 	{
 		if (HitBoxPair.Value != nullptr)
@@ -221,6 +257,8 @@ void ULagCompensationComponent::EnableCharacterMeshCollision(AShooterCharacter* 
 {
 	if (HitCharacter && HitCharacter->GetMesh())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("EnableCharacterMeshCollision"));
+		
 		HitCharacter->GetMesh()->SetCollisionEnabled(CollisionType);
 	}
 }
@@ -228,6 +266,8 @@ void ULagCompensationComponent::EnableCharacterMeshCollision(AShooterCharacter* 
 FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage& OlderFrame,
                                                              const FFramePackage& YoungerFrame, float HiTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("InterpBetweenFrames"));
+	
 	const float Distance = YoungerFrame.Time - OlderFrame.Time;
 	const float InterpFraction = FMath::Clamp((HiTime - OlderFrame.Time) / Distance, 0.f, 1.f);
 
@@ -254,7 +294,7 @@ FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage
 void ULagCompensationComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	//FFramePackage Package;
 	//SaveFramePackage(Package);
 	//ShowFramePackage(Package);
@@ -421,7 +461,7 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	
 	if (FrameHistory.size() <= 1)
 	{
 		FFramePackage ThisFrame;
@@ -440,7 +480,7 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		SaveFramePackage(ThisFrame);
 		FrameHistory.push_front(ThisFrame);
 
-		ShowFramePackage(ThisFrame);
+		//ShowFramePackage(ThisFrame);
 	}
 }
 

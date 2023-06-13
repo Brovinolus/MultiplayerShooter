@@ -66,6 +66,8 @@ protected:
 
 	void HandleReload();
 
+	void FireProjectile();
+
 	int32 AmountToReload();
 
 private:

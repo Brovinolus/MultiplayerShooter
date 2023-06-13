@@ -78,6 +78,14 @@ public:
 		const FVector_NetQuantize100& InitialVelocity,
 		float HitTime
 	);
+
+	UFUNCTION(Server, Reliable)
+	void ProjectileServerScoreRequest(
+		AShooterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime
+	);
 	
 protected:
 	virtual void BeginPlay() override;

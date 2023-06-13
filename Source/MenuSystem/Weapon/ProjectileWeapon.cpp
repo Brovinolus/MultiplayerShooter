@@ -46,13 +46,15 @@ void AProjectileWeapon::FireWeapon(const FVector& HitTarget)
 			}
 			else // server, not locally controlled - spawn non-replicated projectile, no SSR
 			{
+				UE_LOG(LogTemp, Warning, TEXT("ServerSideRewindProjectileClass"));
+				
 				SpawnedProjectile = World->SpawnActor<AProjectile>(
 					ServerSideRewindProjectileClass,
 					SocketTransform.GetLocation(),
 					TargetRotation,
 					SpawnParameters
 				);
-				SpawnedProjectile->bUseServerSideRewind = false;
+				SpawnedProjectile->bUseServerSideRewind = true;
 			}
 		}
 		else // client, using SSR
@@ -71,6 +73,8 @@ void AProjectileWeapon::FireWeapon(const FVector& HitTarget)
 				SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->
 					InitialSpeed;
 				SpawnedProjectile->Damage = Damage;
+
+				UE_LOG(LogTemp, Warning, TEXT("client, using SSR"));
 			}
 			else // client, not locally controlled - spawn non-replicated projectile, no SSR
 			{
