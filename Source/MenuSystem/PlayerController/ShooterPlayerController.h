@@ -24,6 +24,7 @@ public:
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDWeaponMaxAmmo(int32 Ammo);
 	void SetHUDWeaponType(EWeaponType WeaponType);
+	void SetHUDWeaponSSR(bool SSR_State);
 
 	virtual float GetServerTime(); // Synced with server world clock
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible
@@ -78,4 +79,6 @@ private:
 	bool bInitializeMaxAmmo = false;
 	float HUDWeaponAmmo;
 	bool bInitializeWeaponAmmo = false;
+	
+	bool bSSR_State = false;
 };

@@ -304,27 +304,6 @@ private:
 	//void CreateCapsules();
 	void StorePhysicsAsset();
 	void SetHitCapsuleSize();
-
-	/*
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UParticleSystem> CharacterImpactParticles;
-
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<USoundCue> CharacterImpactSounds;
-
-	UPROPERTY()
-	TObjectPtr<class AShooterCharacter> ShooterCharacterReceivingHit;
-
-	float Lifetime = 2.f;
-	FTimerHandle DestroyProjectileTimer;
-
-	void DestroyProjectile();
-
-	FTimerHandle DestroyWidgetHitTimer;
-
-	void ShowHitWidget();
-	*/
-	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

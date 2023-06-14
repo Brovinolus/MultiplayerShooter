@@ -256,6 +256,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Controller->SetHUDWeaponMaxAmmo(MaxWeaponAmmo);
 		Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
+		Controller->SetHUDWeaponSSR(EquippedWeapon->GetSSR_State());
 	}
 
 	if (EquippedWeapon->EquipSound)
@@ -390,6 +391,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		if (Controller)
 		{
 			Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
+			Controller->SetHUDWeaponSSR(EquippedWeapon->GetSSR_State());
 		}
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket)

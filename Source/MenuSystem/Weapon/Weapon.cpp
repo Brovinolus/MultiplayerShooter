@@ -83,12 +83,6 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
-void AWeapon::OnHighPing(bool bPingHigh)
-{
-	bUseServerSideRewind = !bPingHigh;
-	UE_LOG(LogTemp, Warning, TEXT("PingHigh: %s"), bUseServerSideRewind ? TEXT("true") : TEXT("false"))
-}
-
 int32 AWeapon::SetAmmo(int32 NewAmmoValue)
 {
 	Ammo = FMath::Clamp(NewAmmoValue, 0, MagCapacity);
@@ -223,6 +217,7 @@ void AWeapon::AddDisableSSR_OnHighPing()
 	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr
 								? Cast<AShooterCharacter>(GetOwner())
 								: ShooterOwnerCharacter;
+	
 	if (ShooterOwnerCharacter && bUseServerSideRewind)
 	{
 		ShooterOwnerController = ShooterOwnerController == nullptr
@@ -233,7 +228,7 @@ void AWeapon::AddDisableSSR_OnHighPing()
 		{
 			if (!ShooterOwnerController->HighPingDelegate.IsBound())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Add OnHighPing"));
+				UE_LOG(LogTemp, Warning, TEXT("Add DisableSSR"));
 				ShooterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnHighPing);
 			}
 		}
@@ -260,6 +255,12 @@ void AWeapon::RemoveDisableSSR_OnHighPing()
 			}
 		}
 	}
+}
+
+void AWeapon::OnHighPing(bool bPingHigh)
+{
+	bUseServerSideRewind = !bPingHigh;
+	UE_LOG(LogTemp, Warning, TEXT("PingHigh: %s"), bUseServerSideRewind ? TEXT("true") : TEXT("false"));
 }
 
 void AWeapon::SetCanShowParticlesInFireAnimation(bool bCanShowParticles)

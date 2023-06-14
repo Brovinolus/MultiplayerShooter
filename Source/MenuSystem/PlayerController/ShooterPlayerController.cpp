@@ -23,7 +23,12 @@ void AShooterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	PingValue(DeltaSeconds);
+	// if the picked up weapon has SSR disabled, then don't update
+	if (bSSR_State)
+	{
+		PingValue(DeltaSeconds);
+	}
+
 	UpdateHUDValues();
 
 	CheckTimeSync(DeltaSeconds);
@@ -85,6 +90,25 @@ void AShooterPlayerController::PingValue(float DeltaSeconds)
 				
 				HighPingRunningTime = 0.f;
 			}
+		}
+	}
+}
+
+void AShooterPlayerController::SetHUDWeaponSSR(bool SSR_State)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	bool bHUDValid = ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->WeaponType;
+	if(bHUDValid)
+	{
+		if (SSR_State)
+		{
+			bSSR_State = true;
+			ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Enabled"));
+		}
+		else
+		{
+			bSSR_State = false;
+			ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Disabled"));
 		}
 	}
 }
