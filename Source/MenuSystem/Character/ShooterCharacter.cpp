@@ -438,6 +438,14 @@ void AShooterCharacter::FireButtonReleased()
 	}
 }
 
+void AShooterCharacter::FireOnLineTrace(bool bFire)
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(bFire);
+	}
+}
+
 void AShooterCharacter::MoveForward(float Value)
 {
 	if (Controller!=nullptr && Value != 0.f)

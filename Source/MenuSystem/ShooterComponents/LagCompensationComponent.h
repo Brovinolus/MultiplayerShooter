@@ -9,6 +9,9 @@
 #include "MenuSystem/Character/ShooterCharacter.h"
 #include "LagCompensationComponent.generated.h"
 
+struct FPredictProjectilePathResult;
+struct FPredictProjectilePathParams;
+
 USTRUCT(BlueprintType)
 struct FBoxInformation
 {
@@ -109,6 +112,11 @@ protected:
 	// Character Hit Notification and Effects
 	void CharacterHit();
 
+	UFUNCTION(Client, Reliable)
+	void DrawDebugBoxes(FVector Location, FVector BoxExtent, FRotator Rotator);
+	UFUNCTION(Client, Reliable)
+	void DrawHitResult(const FPredictProjectilePathParams& PathParams, FPredictProjectilePathResult PathResult);
+
 	//void SaveFramePackageCapsule(FFramePackage& Package);
 	//void TickCapsule();
 	//void TickPhysicAsset();
@@ -123,7 +131,7 @@ private:
 	TDoubleLinkedList<FFramePackage> FrameHistory;
 
 	UPROPERTY(EditAnywhere)
-	float MaxRecordTime = 4.f;
+	float MaxRecordTime = 2.f;
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	

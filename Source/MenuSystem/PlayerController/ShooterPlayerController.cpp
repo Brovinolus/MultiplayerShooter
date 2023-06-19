@@ -23,11 +23,8 @@ void AShooterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	// if the picked up weapon has SSR disabled, then don't update
-	if (bSSR_State)
-	{
-		PingValue(DeltaSeconds);
-	}
+	
+	PingValue(DeltaSeconds);
 
 	UpdateHUDValues();
 
@@ -73,22 +70,26 @@ void AShooterPlayerController::PingValue(float DeltaSeconds)
 				TEXT("%d"), FMath::FloorToInt(ShooterPlayerState->GetPingInMilliseconds()));
 			ShooterHUD->CharacterOverlay->PingValue->SetText(FText::FromString(PingValue));
 
-			if (HighPingRunningTime > CheckPingFrequency)
+			// if the picked up weapon has SSR disabled, then don't update
+			if (bSSR_State)
 			{
-				if (ShooterPlayerState->GetPingInMilliseconds() > HighPingThreshold)
+				if (HighPingRunningTime > CheckPingFrequency)
 				{
-					ServerReportPingStatus(true);
+					if (ShooterPlayerState->GetPingInMilliseconds() > HighPingThreshold)
+					{
+						ServerReportPingStatus(true);
 					
-					ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Disabled"));
-				}
-				else
-				{
-					ServerReportPingStatus(false);
+						ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Disabled"));
+					}
+					else
+					{
+						ServerReportPingStatus(false);
 
-					ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Enabled"));
-				}
+						ShooterHUD->CharacterOverlay->SSR_State->SetText(FText::FromString("SSR Enabled"));
+					}
 				
-				HighPingRunningTime = 0.f;
+					HighPingRunningTime = 0.f;
+				}
 			}
 		}
 	}

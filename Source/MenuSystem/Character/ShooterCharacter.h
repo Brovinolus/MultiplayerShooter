@@ -45,6 +45,9 @@ public:
 
 	UPROPERTY()
 	TMap<FName, class UBoxComponent*> BoxCollision;
+
+	UFUNCTION(BlueprintCallable, Category = "FireOnLineTrace")
+	void FireOnLineTrace(bool bFire);
 	
 	//UPROPERTY()
 	//TMap<FName, UCapsuleComponent*> CapsuleCollision;
@@ -196,7 +199,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	TObjectPtr<class USpringArmComponent> CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, Category = Camera)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Camera)
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

@@ -54,7 +54,7 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(AShooterCharacter* HitC
 	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Younger = History.GetHead();
 	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Older = Younger;
 	while (Older->GetValue().Time > HitTime) // is Older still younger than HitTime?
-		{
+	{
 		// March back until: OlderTime < HitTime < YoungerTime
 		if (Older->GetNextNode() == nullptr) break;
 		Older = Older->GetNextNode();
@@ -62,12 +62,12 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(AShooterCharacter* HitC
 		{
 			Younger = Older;
 		}
-		}
+	}
 	if (Older->GetValue().Time == HitTime) // highly unlikely, but we found our frame to check
-		{
+	{
 		FrameToCheck = Older->GetValue();
 		bShouldInterpolate = false;
-		}
+	}
 	if (bShouldInterpolate)
 	{
 		// Interpolate between Younger and Older
@@ -191,27 +191,37 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 	
 	PathParams.bTraceWithCollision = true;
 	PathParams.MaxSimTime = MaxRecordTime;
-	PathParams.ProjectileRadius = 5.f;
+	PathParams.ProjectileRadius = 6.f;
 	PathParams.SimFrequency = 15.f;
 	PathParams.StartLocation = TraceStart;
 	PathParams.TraceChannel = ECC_HitBox;
 	PathParams.LaunchVelocity = InitialVelocity;
 	PathParams.ActorsToIgnore.Add(GetOwner());
-	PathParams.DrawDebugTime = 5.f;
-	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+	//PathParams.DrawDebugTime = 5.f;
+	PathParams.DrawDebugType = EDrawDebugTrace::Persistent;
 
 	FPredictProjectilePathResult PathResult;
-	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+	//UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 
+	DrawHitResult(PathParams, PathResult);
+
+	FVector HitLocation = PathResult.HitResult.Location;
+	UE_LOG(LogTemp, Warning, TEXT("Hit Location with SSR: %s"), *HitLocation.ToString());
+	
 	if (PathResult.HitResult.bBlockingHit) // headshot
 	{
+
 		if (PathResult.HitResult.Component.IsValid())
 		{
 			UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
 			if (Box)
 			{
-				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
-				             FQuat(Box->GetComponentRotation()), FColor::Red, false, 4.f);
+				//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
+				             //FQuat(Box->GetComponentRotation()), FColor::Red, true);
+				
+				DrawDebugBoxes(Box->GetComponentLocation(), Box->GetScaledBoxExtent(),Box->GetComponentRotation());
+				
+				UE_LOG(LogTemp, Warning, TEXT("HitBox Location: %s"), *Box->GetComponentLocation().ToString());
 
 				if (GEngine)
 				{
@@ -245,13 +255,17 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 				UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
 				if (Box)
 				{
-					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
-								 FQuat(Box->GetComponentRotation()), FColor::Blue, false, 4.f);
+					//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
+								 //FQuat(Box->GetComponentRotation()), FColor::Blue, true);
+
+					DrawDebugBoxes(Box->GetComponentLocation(), Box->GetScaledBoxExtent(),Box->GetComponentRotation());
+
+					UE_LOG(LogTemp, Warning, TEXT("HitBox Location: %s"), *Box->GetComponentLocation().ToString());
 
 					if (GEngine)
 					{
 						GEngine->AddOnScreenDebugMessage(12, 1.f, FColor::Turquoise,
-						FString::Printf(TEXT("***HitBody***")));     
+						FString::Printf(TEXT("***HitBody***")));
 					}
 				}
 			}
@@ -265,6 +279,17 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 	ResetHitBoxes(HitCharacter, CurrentFrame);
 	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryOnly);
 	return FServerSideRewindResult{false, false };
+}
+
+void ULagCompensationComponent::DrawHitResult_Implementation(const FPredictProjectilePathParams& PathParams,
+	FPredictProjectilePathResult PathResult)
+{
+	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+}
+
+void ULagCompensationComponent::DrawDebugBoxes_Implementation(FVector Location, FVector BoxExtent, FRotator Rotator)
+{
+	DrawDebugBox(GetWorld(), Location, BoxExtent,FQuat(Rotator), FColor::Blue, true);
 }
 
 void ULagCompensationComponent::CacheBoxPosition(AShooterCharacter* HitCharacter, FFramePackage& OutFramePackage)
@@ -512,7 +537,7 @@ void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package)
 			FQuat(BoxInfo.Value.Rotation),
 			FColor::Red,
 			false,
-			4.f
+			0.1f
 		);
 	}
 }
@@ -556,6 +581,8 @@ void ULagCompensationComponent::SaveFramePackage()
 		FFramePackage ThisFrame;
 		SaveFramePackage(ThisFrame);
 		FrameHistory.AddHead(ThisFrame);
+
+		ShowFramePackage(ThisFrame);
 	}
 }
 

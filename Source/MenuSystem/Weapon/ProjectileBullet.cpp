@@ -73,7 +73,7 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	/*
 	FPredictProjectilePathParams PathParams;
 	PathParams.bTraceWithChannel = true;
@@ -81,8 +81,8 @@ void AProjectileBullet::BeginPlay()
 	PathParams.DrawDebugTime = 5.f;
 	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
 	PathParams.MaxSimTime = 4.f;
-	PathParams.ProjectileRadius = 5.f;
-	PathParams.SimFrequency = 30.f;
+	PathParams.ProjectileRadius = 3.f;
+	PathParams.SimFrequency = 15.f;
 	PathParams.StartLocation = GetActorLocation();
 	PathParams.TraceChannel = ECC_Visibility;
 	PathParams.ActorsToIgnore.Add(this);
