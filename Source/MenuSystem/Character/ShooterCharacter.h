@@ -325,4 +325,4 @@ public:
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 };
-//NetEmulation.PktLag 100
+//SHoot

@@ -203,7 +203,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 	FPredictProjectilePathResult PathResult;
 	//UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 
-	DrawHitResult(PathParams, PathResult);
+	//DrawHitResult(PathParams, PathResult);
 
 	FVector HitLocation = PathResult.HitResult.Location;
 	UE_LOG(LogTemp, Warning, TEXT("Hit Location with SSR: %s"), *HitLocation.ToString());
@@ -219,7 +219,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 				//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
 				             //FQuat(Box->GetComponentRotation()), FColor::Red, true);
 				
-				DrawDebugBoxes(Box->GetComponentLocation(), Box->GetScaledBoxExtent(),Box->GetComponentRotation());
+				//DrawDebugBoxes(Box->GetComponentLocation(), Box->GetScaledBoxExtent(),Box->GetComponentRotation());
 				
 				UE_LOG(LogTemp, Warning, TEXT("HitBox Location: %s"), *Box->GetComponentLocation().ToString());
 
@@ -258,7 +258,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 					//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(),
 								 //FQuat(Box->GetComponentRotation()), FColor::Blue, true);
 
-					DrawDebugBoxes(Box->GetComponentLocation(), Box->GetScaledBoxExtent(),Box->GetComponentRotation());
+					//DrawDebugBoxes(Box->GetComponentLocation(), Box->GetScaledBoxExtent(),Box->GetComponentRotation());
 
 					UE_LOG(LogTemp, Warning, TEXT("HitBox Location: %s"), *Box->GetComponentLocation().ToString());
 

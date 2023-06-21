@@ -112,9 +112,9 @@ protected:
 	// Character Hit Notification and Effects
 	void CharacterHit();
 
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Server, Reliable)
 	void DrawDebugBoxes(FVector Location, FVector BoxExtent, FRotator Rotator);
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Server, Reliable)
 	void DrawHitResult(const FPredictProjectilePathParams& PathParams, FPredictProjectilePathResult PathResult);
 
 	//void SaveFramePackageCapsule(FFramePackage& Package);
