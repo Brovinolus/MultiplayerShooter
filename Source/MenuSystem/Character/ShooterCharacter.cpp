@@ -8,7 +8,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "MenuSystem/ShooterComponents/CombatComponent.h"
+#include "..\ShooterComponents\ShooterComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MenuSystem/Weapon/Weapon.h"
 #include "Kismet/KismetMathLibrary.h"

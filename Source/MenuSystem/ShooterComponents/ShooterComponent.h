@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "MenuSystem/Weapon/WeaponTypes.h"
 #include "MenuSystem/ShooterTypes/CombatState.h"
-#include "CombatComponent.generated.h"
+#include "ShooterComponent.generated.h"
 
 #define TRACE_LENGTH 80000.f;
 
